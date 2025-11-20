@@ -75,3 +75,4 @@ class ConfigManager:
                 for key, value in values.items():
                     if hasattr(section_obj, key):
                         setattr(section_obj, key, value)
+                        
