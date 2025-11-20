@@ -1,0 +1,45 @@
+# requirements_updated.txt - Versiones actuales disponibles
+PyQt6==6.6.1
+PyQt6-WebEngine==6.6.0
+qt-material==2.14
+
+# Data Science
+pandas==2.1.4
+numpy==1.26.0
+scikit-learn==1.3.2
+tensorflow-cpu==2.16.2  # Última versión estable
+xgboost==2.0.2
+lightgbm==4.1.0
+
+# Optimization
+bayesian-optimization==1.4.3
+deap==1.4.1
+
+# Trading & Data
+MetaTrader5==5.0.5370  # Última versión disponible
+yfinance==0.2.18
+ccxt==4.1.77
+
+# Visualization
+plotly==5.17.0
+matplotlib==3.8.2
+seaborn==0.13.0
+
+# Database & Cache
+sqlalchemy==2.0.23
+influxdb-client==1.39.0
+redis==5.0.1
+psycopg2-binary==2.9.9
+
+# Utilities
+psutil==5.9.6
+docker==6.1.3
+pyyaml==6.0.1
+joblib==1.3.2
+tqdm==4.66.1
+
+# Development
+pytest==7.4.3
+black==23.9.1
+flake8==6.1.0
+mypy==1.6.1
