@@ -1,8 +1,10 @@
-# database/data_manager.py - FIXED VERSION
+# database/data_manager.py
 import pandas as pd
 import numpy as np
 from sqlalchemy import create_engine, text, MetaData, Table, Column, Integer, String, Float, DateTime
 from sqlalchemy.orm import sessionmaker, declarative_base
+from influxdb_client import InfluxDBClient, Point
+from influxdb_client.client.write_api import SYNCHRONOUS
 import redis
 import pickle
 import zlib
@@ -35,87 +37,53 @@ class TradingData(Base):
 class DataManager:
     def __init__(self, config):
         self.config = config
-        self.influx_available = False
-        self.postgres_available = False
-        self.redis_available = False
         self.setup_databases()
     
     def setup_databases(self):
-        """Configura todas las conexiones a bases de datos con manejo de errores"""
-        # PostgreSQL para datos estructurados
+        """Configura todas las conexiones a bases de datos"""
         try:
+            # PostgreSQL para datos estructurados
             self.pg_engine = create_engine(self.config.database.postgres_url)
             self.Session = sessionmaker(bind=self.pg_engine)
-            TradingData.create_table(self.pg_engine)
-            self.postgres_available = True
-            logger.info("PostgreSQL connected successfully")
-        except Exception as e:
-            logger.warning(f"PostgreSQL connection failed: {e}")
-            self.postgres_available = False
-        
-        # InfluxDB para series temporales
-        try:
-            from influxdb_client import InfluxDBClient
-            from influxdb_client.client.write_api import SYNCHRONOUS
             
+            # InfluxDB para series temporales
             self.influx_client = InfluxDBClient(
                 url=self.config.database.influx_url,
                 token=self.config.database.influx_token,
                 org=self.config.database.influx_org
             )
-            self.write_api = self.influx_client.write_api(write_options=SYNCHRONOUS)
+            self.write_api = self.influx_client.write_api(write_option=SYNCHRONOUS)
             self.query_api = self.influx_client.query_api()
-            self.influx_available = True
-            logger.info("InfluxDB connected successfully")
-        except Exception as e:
-            logger.warning(f"InfluxDB connection failed: {e}")
-            self.influx_available = False
-            self.write_api = None
-            self.query_api = None
-        
-        # Redis para cache
-        try:
+            
+            # Redis para cache
             self.redis_client = redis.Redis.from_url(
                 self.config.database.redis_url,
                 decode_responses=False
             )
-            self.redis_client.ping()  # Test connection
-            self.redis_available = True
-            logger.info("Redis connected successfully")
+            
+            # Crear tablas si no existen
+            TradingData.create_table(self.pg_engine)
+            
+            logger.info("All databases connected successfully")
+            
         except Exception as e:
-            logger.warning(f"Redis connection failed: {e}")
-            self.redis_available = False
+            logger.error(f"Database setup error: {e}")
+            raise
     
     def store_market_data(self, symbol: str, timeframe: str, data: pd.DataFrame):
         """Almacena datos de mercado en múltiples bases de datos"""
-        stored_somewhere = False
-        
-        # PostgreSQL para consultas estructuradas
-        if self.postgres_available:
-            try:
-                self._store_in_postgres(symbol, timeframe, data)
-                stored_somewhere = True
-            except Exception as e:
-                logger.error(f"Error storing in PostgreSQL: {e}")
-        
-        # InfluxDB para análisis temporal
-        if self.influx_available:
-            try:
-                self._store_in_influx(symbol, timeframe, data)
-                stored_somewhere = True
-            except Exception as e:
-                logger.error(f"Error storing in InfluxDB: {e}")
-        
-        # Redis para cache (siempre intentar cachear si está disponible)
-        if self.redis_available:
-            try:
-                self._store_in_redis(symbol, timeframe, data)
-                stored_somewhere = True
-            except Exception as e:
-                logger.error(f"Error storing in Redis: {e}")
-        
-        if not stored_somewhere:
-            logger.warning("Data was not stored in any database")
+        try:
+            # PostgreSQL para consultas estructuradas
+            self._store_in_postgres(symbol, timeframe, data)
+            
+            # InfluxDB para análisis temporal
+            self._store_in_influx(symbol, timeframe, data)
+            
+            # Redis para cache
+            self._store_in_redis(symbol, timeframe, data)
+            
+        except Exception as e:
+            logger.error(f"Error storing market data: {e}")
     
     def _store_in_postgres(self, symbol: str, timeframe: str, data: pd.DataFrame):
         """Almacena en PostgreSQL"""
@@ -137,11 +105,6 @@ class DataManager:
     
     def _store_in_influx(self, symbol: str, timeframe: str, data: pd.DataFrame):
         """Almacena en InfluxDB"""
-        if not self.influx_available or self.write_api is None:
-            return
-        
-        from influxdb_client import Point
-        
         points = []
         for idx, row in data.iterrows():
             point = Point("market_data") \
@@ -165,9 +128,6 @@ class DataManager:
     
     def get_cached_data(self, symbol: str, timeframe: str) -> Optional[pd.DataFrame]:
         """Obtiene datos cacheados de Redis"""
-        if not self.redis_available:
-            return None
-        
         try:
             cache_key = f"market_data:{symbol}:{timeframe}"
             cached = self.redis_client.get(cache_key)
@@ -179,12 +139,11 @@ class DataManager:
     
     def store_strategy_result(self, strategy_name: str, result_data: Dict):
         """Almacena resultados de estrategias"""
-        if not self.influx_available or self.write_api is None:
-            logger.warning("Cannot store strategy result - InfluxDB not available")
-            return
-        
         try:
-            from influxdb_client import Point
+            # PostgreSQL
+            with self.Session() as session:
+                # Implementar lógica de almacenamiento de resultados
+                pass
             
             # InfluxDB para métricas temporales
             point = Point("strategy_performance") \
@@ -201,10 +160,6 @@ class DataManager:
     
     def get_performance_history(self, strategy_name: str, days: int = 30) -> pd.DataFrame:
         """Obtiene historial de performance de una estrategia"""
-        if not self.influx_available or self.query_api is None:
-            logger.warning("Cannot get performance history - InfluxDB not available")
-            return pd.DataFrame()
-        
         try:
             query = f'''
             from(bucket: "trading")

@@ -14,7 +14,7 @@ from pathlib import Path
 from datetime import datetime
 
 from core.platform import TradingPlatform, get_platform
-from core.monitoring import AdvancedLogger, HealthChecker
+from core.monitoring import AdvancedLogger, HealthChecker, MonitoringConfig
 from config.deployment import DeploymentManager, DeploymentConfig, BackupManager
 
 def setup_argparse():

@@ -175,7 +175,7 @@ class FeatureEngineer:
 
     def prepare_features(self, data: pd.DataFrame, target: pd.Series, 
                         fit: bool = True) -> Tuple[pd.DataFrame, pd.Series]:
-        """Preparar características para ML"""
+        """Preparar características para ML - FIXED VERSION"""
         
         # Validar datos de entrada
         if len(data) < 100:
@@ -184,12 +184,13 @@ class FeatureEngineer:
         # Crear características técnicas
         df = self.create_technical_features(data)
         
-        # Crear características retrasadas (REDUCIDO para evitar demasiados NaN)
+        # Crear características retrasadas (solo las más importantes para evitar NaN)
         price_columns = ['open', 'high', 'low', 'close', 'volume']
         existing_price_columns = [col for col in price_columns if col in df.columns]
-        df = self.create_lagged_features(df, existing_price_columns, [1, 2, 3])  # Solo 3 lags
+        # Reducir lags para mantener más datos
+        df = self.create_lagged_features(df, existing_price_columns, [1, 2, 3])
         
-        # Crear características rolling (REDUCIDO)
+        # Crear características rolling (reducidas)
         rolling_columns = []
         if 'returns' in df.columns:
             rolling_columns.append('returns')
@@ -199,22 +200,25 @@ class FeatureEngineer:
             rolling_columns.append('atr')
         
         if rolling_columns:
-            df = self.create_rolling_features(df, rolling_columns, [5, 10])  # Solo 2 ventanas
+            # Reducir ventanas para mantener más datos
+            df = self.create_rolling_features(df, rolling_columns, [5, 10])
         
         # Alinear con target y eliminar NaN
         aligned_data = pd.concat([df, target], axis=1).dropna()
         
-        # Verificar que tenemos suficientes datos
+        # Verificar que tenemos suficientes datos después de eliminar NaN
         if len(aligned_data) < 10:
             raise ValueError(f"After removing NaN, only {len(aligned_data)} samples remain. "
-                            f"Original data had {len(data)} rows. Need at least 10 samples.")
+                            f"Original data had {len(data)} rows. This is insufficient for training.")
         
         X = aligned_data.iloc[:, :-1]
         y = aligned_data.iloc[:, -1]
         
-        # Limpiar datos
+        # Verificar que no hay columnas con todos NaN o Inf
         X = X.replace([np.inf, -np.inf], np.nan)
-        X = X.dropna(axis=1, how='all')
+        X = X.dropna(axis=1, how='all')  # Eliminar columnas con solo NaN
+        
+        # Eliminar columnas con varianza cero
         X = X.loc[:, X.std() > 0]
         
         if X.shape[1] == 0:
@@ -226,7 +230,7 @@ class FeatureEngineer:
             self.fitted = True
         else:
             if not self.fitted:
-                raise ValueError("Scaler not fitted. Call with fit=True first.")
+                raise ValueError("Scaler no está fitted. Llama con fit=True primero.")
             X_scaled = self.scaler.transform(X)
         
         return pd.DataFrame(X_scaled, columns=X.columns, index=X.index), y

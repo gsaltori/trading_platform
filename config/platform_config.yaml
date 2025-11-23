@@ -1,0 +1,50 @@
+# Configuración LITE - Sin PostgreSQL/Redis/InfluxDB
+# Ideal para desarrollo y pruebas
+
+platform:
+  name: "Trading Platform - Lite Mode"
+  version: "1.0.0"
+  environment: development
+  lite_mode: true
+
+database:
+  # SQLite en lugar de PostgreSQL (no requiere instalación)
+  postgres_url: "sqlite:///data/trading.db"
+  
+  # Redis deshabilitado (usar cache en memoria)
+  redis_url: "redis://localhost:6379/0"
+  redis_enabled: false
+  
+  # InfluxDB deshabilitado
+  influx_url: "http://localhost:8086"
+  influx_enabled: false
+  influx_token: "dev-token"
+  influx_org: "trading"
+
+mt5:
+  path: "C:/Program Files/MetaTrader 5/terminal64.exe"
+  server: ""
+  login: 0
+  password: ""
+  timeout: 60000
+  portable: false
+
+risk:
+  max_drawdown: 0.15
+  max_position_size: 0.1
+  daily_loss_limit: 0.05
+  correlation_threshold: 0.7
+
+optimization:
+  population_size: 50
+  generations: 20
+  mutation_rate: 0.1
+  crossover_rate: 0.8
+
+monitoring:
+  enable_performance_monitoring: true
+  enable_trade_monitoring: true
+  enable_system_monitoring: true
+  log_level: "INFO"
+  log_retention_days: 7
+  metrics_interval: 60
