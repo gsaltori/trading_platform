@@ -34,7 +34,6 @@ class TradingData(Base):
 
 class DataManager:
     def __init__(self, config):
-        self.memory_cache = {}  # Cache en memoria como fallback
         self.config = config
         self.influx_available = False
         self.postgres_available = False
@@ -42,25 +41,27 @@ class DataManager:
         self.setup_databases()
     
     def setup_databases(self):
-        """Configura todas las conexiones a bases de datos"""
+        """Configura todas las conexiones a bases de datos con manejo de errores"""
+        # PostgreSQL para datos estructurados
         # Flags de disponibilidad
         self.postgres_available = False
         self.influx_available = False
         self.redis_available = False
         
-        # PostgreSQL
         try:
             self.pg_engine = create_engine(self.config.database.postgres_url)
             self.Session = sessionmaker(bind=self.pg_engine)
             TradingData.create_table(self.pg_engine)
             self.postgres_available = True
             logger.info("PostgreSQL connected successfully")
+        # Intentar cada servicio individualmente
+        try:
+            self.pg_engine = create_engine(self.config.database.postgres_url)
+            self.Session = sessionmaker(bind=self.pg_engine)
+            self.postgres_available = True
         except Exception as e:
-            logger.warning(f"PostgreSQL connection failed: {e}")
-            self.pg_engine = None
-            self.Session = None
+            logger.warning(f"PostgreSQL not available: {e}")
         
-        # InfluxDB
         try:
             self.influx_client = InfluxDBClient(
                 url=self.config.database.influx_url,
@@ -70,14 +71,9 @@ class DataManager:
             self.write_api = self.influx_client.write_api(write_option=SYNCHRONOUS)
             self.query_api = self.influx_client.query_api()
             self.influx_available = True
-            logger.info("InfluxDB connected successfully")
         except Exception as e:
-            logger.warning(f"InfluxDB connection failed: {e}")
-            self.influx_client = None
-            self.write_api = None
-            self.query_api = None
+            logger.warning(f"InfluxDB not available: {e}")
         
-        # Redis
         try:
             self.redis_client = redis.Redis.from_url(
                 self.config.database.redis_url,
@@ -85,49 +81,79 @@ class DataManager:
             )
             self.redis_client.ping()
             self.redis_available = True
+        except Exception as e:
+            logger.warning(f"Redis not available: {e}")
+        
+        logger.info(f"Databases: Postgres={self.postgres_available}, InfluxDB={self.influx_available}, Redis={self.redis_available}")
+            logger.warning(f"PostgreSQL connection failed: {e}")
+            self.postgres_available = False
+        
+        # InfluxDB para series temporales
+        try:
+            from influxdb_client import InfluxDBClient
+            from influxdb_client.client.write_api import SYNCHRONOUS
+            
+            self.influx_client = InfluxDBClient(
+                url=self.config.database.influx_url,
+                token=self.config.database.influx_token,
+                org=self.config.database.influx_org
+            )
+            self.write_api = self.influx_client.write_api(write_options=SYNCHRONOUS)
+            self.query_api = self.influx_client.query_api()
+            self.influx_available = True
+            logger.info("InfluxDB connected successfully")
+        except Exception as e:
+            logger.warning(f"InfluxDB connection failed: {e}")
+            self.influx_available = False
+            self.write_api = None
+            self.query_api = None
+        
+        # Redis para cache
+        try:
+            self.redis_client = redis.Redis.from_url(
+                self.config.database.redis_url,
+                decode_responses=False
+            )
+            self.redis_client.ping()  # Test connection
+            self.redis_available = True
             logger.info("Redis connected successfully")
         except Exception as e:
             logger.warning(f"Redis connection failed: {e}")
-            self.redis_client = None
-        
-        logger.info(f"Database availability - Postgres: {self.postgres_available}, "
-                   f"InfluxDB: {self.influx_available}, Redis: {self.redis_available}")
-
+            self.redis_available = False
+    
     def store_market_data(self, symbol: str, timeframe: str, data: pd.DataFrame):
         """Almacena datos de mercado en múltiples bases de datos"""
-        success = False
+        stored_somewhere = False
         
-        try:
-            # PostgreSQL para consultas estructuradas
-            self._store_in_postgres(symbol, timeframe, data)
-            if self.postgres_available:
-                success = True
-        except Exception as e:
-            logger.error(f"Error storing in PostgreSQL: {e}")
+        # PostgreSQL para consultas estructuradas
+        if self.postgres_available:
+            try:
+                self._store_in_postgres(symbol, timeframe, data)
+                stored_somewhere = True
+            except Exception as e:
+                logger.error(f"Error storing in PostgreSQL: {e}")
         
-        try:
-            # InfluxDB para análisis temporal
-            self._store_in_influx(symbol, timeframe, data)
-            if self.influx_available:
-                success = True
-        except Exception as e:
-            logger.error(f"Error storing in InfluxDB: {e}")
+        # InfluxDB para análisis temporal
+        if self.influx_available:
+            try:
+                self._store_in_influx(symbol, timeframe, data)
+                stored_somewhere = True
+            except Exception as e:
+                logger.error(f"Error storing in InfluxDB: {e}")
         
-        try:
-            # Redis/Memory para cache (SIEMPRE se ejecuta)
-            self._store_in_redis(symbol, timeframe, data)
-            success = True  # Cache siempre funciona (Redis o memoria)
-        except Exception as e:
-            logger.error(f"Error storing in cache: {e}")
+        # Redis para cache (siempre intentar cachear si está disponible)
+        if self.redis_available:
+            try:
+                self._store_in_redis(symbol, timeframe, data)
+                stored_somewhere = True
+            except Exception as e:
+                logger.error(f"Error storing in Redis: {e}")
         
-        if not success:
+        if not stored_somewhere:
             logger.warning("Data was not stored in any database")
-
+    
     def _store_in_postgres(self, symbol: str, timeframe: str, data: pd.DataFrame):
         """Almacena en PostgreSQL"""
-        if not self.postgres_available or self.Session is None:
-            return
-        
         with self.Session() as session:
             for idx, row in data.iterrows():
                 record = TradingData(

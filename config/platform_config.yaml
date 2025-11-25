@@ -1,24 +1,14 @@
-# Configuración LITE - Sin PostgreSQL/Redis/InfluxDB
-# Ideal para desarrollo y pruebas
-
+# Platform Configuration
 platform:
-  name: "Trading Platform - Lite Mode"
+  name: "Trading Platform"
   version: "1.0.0"
   environment: development
-  lite_mode: true
 
 database:
-  # SQLite en lugar de PostgreSQL (no requiere instalación)
-  postgres_url: "sqlite:///data/trading.db"
-  
-  # Redis deshabilitado (usar cache en memoria)
+  postgres_url: "postgresql://trading_user:trading_password@localhost:5432/trading"
   redis_url: "redis://localhost:6379/0"
-  redis_enabled: false
-  
-  # InfluxDB deshabilitado
   influx_url: "http://localhost:8086"
-  influx_enabled: false
-  influx_token: "dev-token"
+  influx_token: "your-token"
   influx_org: "trading"
 
 mt5:
@@ -36,8 +26,8 @@ risk:
   correlation_threshold: 0.7
 
 optimization:
-  population_size: 50
-  generations: 20
+  population_size: 100
+  generations: 50
   mutation_rate: 0.1
   crossover_rate: 0.8
 
@@ -46,5 +36,5 @@ monitoring:
   enable_trade_monitoring: true
   enable_system_monitoring: true
   log_level: "INFO"
-  log_retention_days: 7
+  log_retention_days: 30
   metrics_interval: 60

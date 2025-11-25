@@ -69,7 +69,7 @@ class FeatureEngineer:
         df['normalized_range'] = df['price_range'] / df['close']
         
         # Medias móviles y sus cruces
-        for window in [5, 10, 20]:  # Reducido para datasets pequeños
+        for window in [5, 10, 20, 50, 100]:
             df[f'sma_{window}'] = ta.SMA(df['close'], timeperiod=window)
             df[f'ema_{window}'] = ta.EMA(df['close'], timeperiod=window)
             df[f'sma_ratio_{window}'] = df['close'] / df[f'sma_{window}'] - 1
@@ -115,11 +115,11 @@ class FeatureEngineer:
         df['volume_price_trend'] = df['volume'] * df['returns']
         
         # Volatilidad
-        for window in [5, 10]:  # Reducido para datasets pequeños
+        for window in [10, 20, 30]:
             df[f'volatility_{window}'] = df['returns'].rolling(window).std()
         
         # Momentum
-        for period in [3, 5]:  # Reducido para datasets pequeños
+        for period in [5, 10, 20]:
             df[f'momentum_{period}'] = df['close'] / df['close'].shift(period) - 1
         
         # Patrones de precio
@@ -511,9 +511,6 @@ class MLEngine:
     """Motor principal de Machine Learning"""
     
     def __init__(self):
-        self.feature_engineer = FeatureEngineer()
-        self.models = {}
-        self.results = {}
         self.scaler = StandardScaler()
         self.feature_selector = None
         self.fitted = False

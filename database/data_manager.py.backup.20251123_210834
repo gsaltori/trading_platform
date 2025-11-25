@@ -95,34 +95,35 @@ class DataManager:
 
     def store_market_data(self, symbol: str, timeframe: str, data: pd.DataFrame):
         """Almacena datos de mercado en múltiples bases de datos"""
-        success = False
+        stored_somewhere = False
         
-        try:
-            # PostgreSQL para consultas estructuradas
-            self._store_in_postgres(symbol, timeframe, data)
-            if self.postgres_available:
-                success = True
-        except Exception as e:
-            logger.error(f"Error storing in PostgreSQL: {e}")
+        # PostgreSQL para consultas estructuradas
+        if self.postgres_available:
+            try:
+                self._store_in_postgres(symbol, timeframe, data)
+                stored_somewhere = True
+            except Exception as e:
+                logger.error(f"Error storing in PostgreSQL: {e}")
         
-        try:
-            # InfluxDB para análisis temporal
-            self._store_in_influx(symbol, timeframe, data)
-            if self.influx_available:
-                success = True
-        except Exception as e:
-            logger.error(f"Error storing in InfluxDB: {e}")
+        # InfluxDB para análisis temporal
+        if self.influx_available:
+            try:
+                self._store_in_influx(symbol, timeframe, data)
+                stored_somewhere = True
+            except Exception as e:
+                logger.error(f"Error storing in InfluxDB: {e}")
         
-        try:
-            # Redis/Memory para cache (SIEMPRE se ejecuta)
-            self._store_in_redis(symbol, timeframe, data)
-            success = True  # Cache siempre funciona (Redis o memoria)
-        except Exception as e:
-            logger.error(f"Error storing in cache: {e}")
+        # Redis para cache (siempre intentar cachear si está disponible)
+        if self.redis_available:
+            try:
+                self._store_in_redis(symbol, timeframe, data)
+                stored_somewhere = True
+            except Exception as e:
+                logger.error(f"Error storing in Redis: {e}")
         
-        if not success:
+        if not stored_somewhere:
             logger.warning("Data was not stored in any database")
-
+    
     def _store_in_postgres(self, symbol: str, timeframe: str, data: pd.DataFrame):
         """Almacena en PostgreSQL"""
         if not self.postgres_available or self.Session is None:

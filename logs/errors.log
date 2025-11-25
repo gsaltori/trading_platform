@@ -137,3 +137,17 @@ connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection re
 	Is the server running on that host and accepting TCP/IP connections?
 
 (Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-11-23 21:47:26 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: DLL load failed while importing QtCore: No se encontró el proceso especificado.
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 4, in <module>
+    from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
+ImportError: DLL load failed while importing QtCore: No se encontró el proceso especificado.
+2025-11-24 19:31:17 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: DLL load failed while importing QtCore: No se encontró el proceso especificado.
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 4, in <module>
+    from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
+ImportError: DLL load failed while importing QtCore: No se encontró el proceso especificado.

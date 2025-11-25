@@ -348,3 +348,96 @@ connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection re
 2025-11-22 15:46:57,519 - core.platform - WARNING - [platform.py:148] - Error closing InfluxDB: 'NoneType' object has no attribute 'close'
 2025-11-22 15:46:57,525 - core.platform - INFO - [platform.py:173] - Platform state saved
 2025-11-22 15:46:57,525 - core.platform - INFO - [platform.py:154] - Trading Platform shut down successfully
+2025-11-23 21:47:20,432 - Main - INFO - [monitoring.py:93] - Logging system initialized for Main
+2025-11-23 21:47:20,529 - Main - INFO - [main.py:77] - Iniciando plataforma en modo: development
+2025-11-23 21:47:24,741 - database.data_manager - WARNING - [data_manager.py:59] - PostgreSQL connection failed: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-11-23 21:47:24,741 - database.data_manager - WARNING - [data_manager.py:75] - InfluxDB connection failed: name 'InfluxDBClient' is not defined
+2025-11-23 21:47:24,762 - database.data_manager - INFO - [data_manager.py:88] - Redis connected successfully
+2025-11-23 21:47:24,762 - database.data_manager - INFO - [data_manager.py:93] - Database availability - Postgres: False, InfluxDB: False, Redis: True
+2025-11-23 21:47:24,763 - core.platform - INFO - [platform.py:49] - Trading Platform instance created successfully
+2025-11-23 21:47:24,764 - core.platform - INFO - [platform.py:75] - Initializing Trading Platform...
+2025-11-23 21:47:24,776 - data.mt5_connector - INFO - [mt5_connector.py:52] - MT5 connected successfully
+2025-11-23 21:47:25,107 - core.platform - INFO - [platform.py:81] - MT5 connection established on attempt 1
+2025-11-23 21:47:25,107 - core.platform - WARNING - [platform.py:105] - Database verification warning: 'NoneType' object is not callable
+2025-11-23 21:47:25,307 - core.platform - INFO - [platform.py:125] - Found 9152 available symbols
+2025-11-23 21:47:25,328 - core.platform - INFO - [platform.py:112] - Trading Platform initialized successfully
+2025-11-23 21:47:25,393 - Main - INFO - [monitoring.py:110] - Monitoring system started
+2025-11-23 21:47:25,515 - Main - WARNING - [main.py:183] - Problemas detectados en health check inicial
+2025-11-23 21:47:26,014 - Main - INFO - [main.py:190] - Ejecutando interfaz gráfica...
+2025-11-23 21:47:26,515 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: DLL load failed while importing QtCore: No se encontró el proceso especificado.
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 4, in <module>
+    from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
+ImportError: DLL load failed while importing QtCore: No se encontró el proceso especificado.
+2025-11-23 21:47:36,527 - Main - WARNING - [monitoring.py:118] - Monitoring thread did not stop cleanly
+2025-11-23 21:47:36,532 - core.platform - INFO - [platform.py:134] - Shutting down Trading Platform...
+2025-11-23 21:47:36,533 - data.mt5_connector - INFO - [mt5_connector.py:67] - MT5 disconnected
+2025-11-23 21:47:36,533 - core.platform - WARNING - [platform.py:148] - Error closing InfluxDB: 'NoneType' object has no attribute 'close'
+2025-11-23 21:47:36,537 - core.platform - INFO - [platform.py:173] - Platform state saved
+2025-11-23 21:47:36,537 - core.platform - INFO - [platform.py:154] - Trading Platform shut down successfully
+2025-11-24 19:31:11,859 - Main - INFO - [monitoring.py:93] - Logging system initialized for Main
+2025-11-24 19:31:11,902 - Main - INFO - [main.py:77] - Iniciando plataforma en modo: development
+2025-11-24 19:31:16,122 - database.data_manager - WARNING - [data_manager.py:59] - PostgreSQL connection failed: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-11-24 19:31:16,123 - database.data_manager - WARNING - [data_manager.py:75] - InfluxDB connection failed: name 'InfluxDBClient' is not defined
+2025-11-24 19:31:16,238 - database.data_manager - INFO - [data_manager.py:88] - Redis connected successfully
+2025-11-24 19:31:16,240 - database.data_manager - INFO - [data_manager.py:93] - Database availability - Postgres: False, InfluxDB: False, Redis: True
+2025-11-24 19:31:16,240 - core.platform - INFO - [platform.py:49] - Trading Platform instance created successfully
+2025-11-24 19:31:16,240 - core.platform - INFO - [platform.py:75] - Initializing Trading Platform...
+2025-11-24 19:31:16,349 - data.mt5_connector - INFO - [mt5_connector.py:52] - MT5 connected successfully
+2025-11-24 19:31:16,705 - core.platform - INFO - [platform.py:81] - MT5 connection established on attempt 1
+2025-11-24 19:31:16,705 - core.platform - WARNING - [platform.py:105] - Database verification warning: 'NoneType' object is not callable
+2025-11-24 19:31:16,868 - core.platform - INFO - [platform.py:125] - Found 9152 available symbols
+2025-11-24 19:31:16,884 - core.platform - INFO - [platform.py:112] - Trading Platform initialized successfully
+2025-11-24 19:31:16,924 - Main - INFO - [monitoring.py:110] - Monitoring system started
+2025-11-24 19:31:17,279 - Main - WARNING - [main.py:183] - Problemas detectados en health check inicial
+2025-11-24 19:31:17,308 - Main - INFO - [main.py:190] - Ejecutando interfaz gráfica...
+2025-11-24 19:31:17,331 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: DLL load failed while importing QtCore: No se encontró el proceso especificado.
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 4, in <module>
+    from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
+ImportError: DLL load failed while importing QtCore: No se encontró el proceso especificado.
+2025-11-24 19:31:27,343 - Main - WARNING - [monitoring.py:118] - Monitoring thread did not stop cleanly
+2025-11-24 19:31:27,343 - core.platform - INFO - [platform.py:134] - Shutting down Trading Platform...
+2025-11-24 19:31:27,343 - data.mt5_connector - INFO - [mt5_connector.py:67] - MT5 disconnected
+2025-11-24 19:31:27,343 - core.platform - WARNING - [platform.py:148] - Error closing InfluxDB: 'NoneType' object has no attribute 'close'
+2025-11-24 19:31:27,343 - core.platform - INFO - [platform.py:173] - Platform state saved
+2025-11-24 19:31:27,343 - core.platform - INFO - [platform.py:154] - Trading Platform shut down successfully
+2025-11-24 19:36:53,496 - database.data_manager - WARNING - [data_manager.py:59] - PostgreSQL connection failed: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-11-24 19:36:53,498 - database.data_manager - WARNING - [data_manager.py:75] - InfluxDB connection failed: name 'InfluxDBClient' is not defined
+2025-11-24 19:36:53,527 - database.data_manager - INFO - [data_manager.py:88] - Redis connected successfully
+2025-11-24 19:36:53,528 - database.data_manager - INFO - [data_manager.py:93] - Database availability - Postgres: False, InfluxDB: False, Redis: True
+2025-11-24 19:36:53,528 - core.platform - INFO - [platform.py:49] - Trading Platform instance created successfully
+2025-11-24 19:36:53,529 - core.platform - INFO - [platform.py:75] - Initializing Trading Platform...
+2025-11-24 19:36:53,537 - data.mt5_connector - INFO - [mt5_connector.py:52] - MT5 connected successfully
+2025-11-24 19:36:53,812 - core.platform - INFO - [platform.py:81] - MT5 connection established on attempt 1
+2025-11-24 19:36:53,812 - core.platform - WARNING - [platform.py:105] - Database verification warning: 'NoneType' object is not callable
+2025-11-24 19:36:53,980 - core.platform - INFO - [platform.py:125] - Found 9152 available symbols
+2025-11-24 19:36:54,004 - core.platform - INFO - [platform.py:112] - Trading Platform initialized successfully
+2025-11-24 19:36:54,123 - core.platform - INFO - [platform.py:216] - Retrieved and cached 6196 bars for EURUSD H1
+2025-11-24 19:36:54,124 - ml.ml_engine - INFO - [ml_engine.py:525] - Entrenando modelo xgboost para price_direction
+2025-11-24 19:36:54,438 - ml.ml_engine - ERROR - [ml_engine.py:615] - Error entrenando modelo: 'volume'
+2025-11-24 19:36:54,440 - core.platform - INFO - [platform.py:134] - Shutting down Trading Platform...
+2025-11-24 19:36:54,440 - data.mt5_connector - INFO - [mt5_connector.py:67] - MT5 disconnected
+2025-11-24 19:36:54,440 - core.platform - WARNING - [platform.py:148] - Error closing InfluxDB: 'NoneType' object has no attribute 'close'
+2025-11-24 19:36:54,442 - core.platform - INFO - [platform.py:173] - Platform state saved
+2025-11-24 19:36:54,442 - core.platform - INFO - [platform.py:154] - Trading Platform shut down successfully
+2025-11-24 19:36:54,442 - core.platform - ERROR - [platform.py:321] - Exception in context: KeyError: 'volume'
