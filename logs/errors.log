@@ -151,3 +151,17 @@ Traceback (most recent call last):
   File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 4, in <module>
     from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
 ImportError: DLL load failed while importing QtCore: No se encontró el proceso especificado.
+2025-11-25 09:59:06 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: DLL load failed while importing QtCore: No se encontró el proceso especificado.
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 4, in <module>
+    from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
+ImportError: DLL load failed while importing QtCore: No se encontró el proceso especificado.
+2025-11-25 10:09:20 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: DLL load failed while importing QtCore: No se encontró el proceso especificado.
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 4, in <module>
+    from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
+ImportError: DLL load failed while importing QtCore: No se encontró el proceso especificado.

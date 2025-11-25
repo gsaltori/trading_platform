@@ -109,10 +109,17 @@ class FeatureEngineer:
         df['atr'] = atr.average_true_range()
         df['atr_pct'] = df['atr'] / df['close']
         
-        # Volumen
-        df['volume_sma'] = ta.SMA(df['volume'], timeperiod=20)
-        df['volume_ratio'] = df['volume'] / df['volume_sma']
-        df['volume_price_trend'] = df['volume'] * df['returns']
+        # Volumen (manejar tanto 'volume' como 'tick_volume')
+        volume_col = 'volume' if 'volume' in df.columns else 'tick_volume'
+        if volume_col in df.columns:
+            df['volume_sma'] = ta.SMA(df[volume_col], timeperiod=20)
+            df['volume_ratio'] = df[volume_col] / df['volume_sma']
+            df['volume_price_trend'] = df[volume_col] * df['returns']
+        else:
+            # Si no hay datos de volumen, crear columnas dummy
+            df['volume_sma'] = 1.0
+            df['volume_ratio'] = 1.0
+            df['volume_price_trend'] = 0.0
         
         # Volatilidad
         for window in [5, 10]:  # Reducido para datasets pequeños
@@ -801,7 +808,13 @@ class MarketRegimeDetector:
         features['range'] = (data['high'] - data['low']) / data['close']
         
         # Volumen
-        features['volume_z'] = (data['volume'] - data['volume'].rolling(20).mean()) / data['volume'].rolling(20).std()
+        # Volumen (manejar tick_volume si volume no existe)
+        volume_col = 'volume' if 'volume' in data.columns else 'tick_volume'
+        if volume_col in data.columns:
+            features['volume_z'] = (data[volume_col] - data[volume_col].rolling(20).mean()) / data[volume_col].rolling(20).std()
+        else:
+            # Sin datos de volumen, usar 0
+            features['volume_z'] = 0.0
         
         features = features.dropna()
         
