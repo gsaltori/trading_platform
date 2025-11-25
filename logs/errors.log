@@ -165,3 +165,45 @@ Traceback (most recent call last):
   File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 4, in <module>
     from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
 ImportError: DLL load failed while importing QtCore: No se encontró el proceso especificado.
+2025-11-25 10:21:19 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: DLL load failed while importing QtCore: No se encontró el proceso especificado.
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 4, in <module>
+    from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
+ImportError: DLL load failed while importing QtCore: No se encontró el proceso especificado.
+2025-11-25 10:28:27 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: DLL load failed while importing QtCore: No se encontró el proceso especificado.
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 4, in <module>
+    from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
+ImportError: DLL load failed while importing QtCore: No se encontró el proceso especificado.
+2025-11-25 11:10:40 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: DLL load failed while importing QtCore: No se encontró el proceso especificado.
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 4, in <module>
+    from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
+ImportError: DLL load failed while importing QtCore: No se encontró el proceso especificado.
+2025-11-25 11:15:34 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: cannot import name 'QAction' from 'PyQt5.QtGui' (C:\Users\giova\AppData\Roaming\Python\Python312\site-packages\PyQt5\QtGui.pyd)
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 11, in <module>
+    from PyQt5.QtGui import QAction, QIcon, QFont
+ImportError: cannot import name 'QAction' from 'PyQt5.QtGui' (C:\Users\giova\AppData\Roaming\Python\Python312\site-packages\PyQt5\QtGui.pyd)
+2025-11-25 11:27:03 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: No module named 'PyQt5.QtCharts'
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 13, in <module>
+    from PyQt5.QtCharts import QChart, QChartView, QLineSeries, QDateTimeAxis, QValueAxis
+ModuleNotFoundError: No module named 'PyQt5.QtCharts'
+2025-11-25 11:34:53 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: No module named 'PyQtChart'
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 13, in <module>
+    from PyQtChart.QtChart import QChart, QChartView, QLineSeries, QDateTimeAxis, QValueAxis
+ModuleNotFoundError: No module named 'PyQtChart'

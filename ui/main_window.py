@@ -1,15 +1,16 @@
 # ui/main_window.py
 import sys
 import logging
-from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget, 
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget, 
                              QVBoxLayout, QHBoxLayout, QPushButton, QLabel, 
                              QComboBox, QLineEdit, QTableWidget, QTableWidgetItem,
                              QTextEdit, QProgressBar, QSplitter, QGroupBox,
                              QGridLayout, QMessageBox, QToolBar, QStatusBar,
                              QFileDialog, QCheckBox, QSpinBox, QDoubleSpinBox)
-from PyQt6.QtCore import Qt, QTimer, QThread, pyqtSignal
-from PyQt6.QtGui import QAction, QIcon, QFont
-from PyQt6.QtCharts import QChart, QChartView, QLineSeries, QDateTimeAxis, QValueAxis
+from PyQt5.QtCore import Qt, QTimer, QThread, pyqtSignal
+from PyQt5.QtWidgets import QAction
+from PyQt5.QtGui import QIcon, QFont
+from PyQtChart.QtChart import QChart, QChartView, QLineSeries, QDateTimeAxis, QValueAxis
 from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
@@ -96,7 +97,7 @@ class MainWindow(QMainWindow):
         
         # Título
         title = QLabel("Dashboard Principal")
-        title.setFont(QFont("Arial", 16, QFont.Weight.Bold))
+        title.setFont(QFont("Arial", 16, QFont.Bold))
         layout.addWidget(title)
         
         # Métricas en tiempo real
@@ -127,11 +128,11 @@ class MainWindow(QMainWindow):
         
         axis_x = QDateTimeAxis()
         axis_x.setFormat("dd/MM hh:mm")
-        self.equity_chart.addAxis(axis_x, Qt.AlignmentFlag.AlignBottom)
+        self.equity_chart.addAxis(axis_x, Qt.AlignBottom)
         self.equity_series.attachAxis(axis_x)
         
         axis_y = QValueAxis()
-        self.equity_chart.addAxis(axis_y, Qt.AlignmentFlag.AlignLeft)
+        self.equity_chart.addAxis(axis_y, Qt.AlignLeft)
         self.equity_series.attachAxis(axis_y)
         
         self.equity_chart_view = QChartView(self.equity_chart)

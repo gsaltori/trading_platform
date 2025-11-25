@@ -2430,3 +2430,360 @@ ImportError: DLL load failed while importing QtCore: No se encontró el proceso e
 2025-11-25 10:09:30,891 - core.platform - WARNING - [platform.py:148] - Error closing InfluxDB: 'NoneType' object has no attribute 'close'
 2025-11-25 10:09:30,892 - core.platform - INFO - [platform.py:173] - Platform state saved
 2025-11-25 10:09:30,892 - core.platform - INFO - [platform.py:154] - Trading Platform shut down successfully
+2025-11-25 10:21:04 - Main - INFO - [monitoring.py:93] - Logging system initialized for Main
+2025-11-25 10:21:04,410 - Main - INFO - [monitoring.py:93] - Logging system initialized for Main
+2025-11-25 10:21:04 - Main - INFO - [main.py:77] - Iniciando plataforma en modo: development
+2025-11-25 10:21:04,410 - Main - INFO - [main.py:77] - Iniciando plataforma en modo: development
+2025-11-25 10:21:08,715 - database.data_manager - WARNING - [data_manager.py:59] - PostgreSQL connection failed: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-11-25 10:21:08,716 - database.data_manager - WARNING - [data_manager.py:75] - InfluxDB connection failed: name 'InfluxDBClient' is not defined
+2025-11-25 10:21:12,811 - database.data_manager - WARNING - [data_manager.py:90] - Redis connection failed: Error 10061 connecting to localhost:6379. No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión.
+2025-11-25 10:21:12,812 - database.data_manager - INFO - [data_manager.py:93] - Database availability - Postgres: False, InfluxDB: False, Redis: False
+2025-11-25 10:21:12,813 - core.platform - INFO - [platform.py:49] - Trading Platform instance created successfully
+2025-11-25 10:21:12,813 - core.platform - INFO - [platform.py:75] - Initializing Trading Platform...
+2025-11-25 10:21:18,508 - data.mt5_connector - INFO - [mt5_connector.py:52] - MT5 connected successfully
+2025-11-25 10:21:18,699 - core.platform - INFO - [platform.py:81] - MT5 connection established on attempt 1
+2025-11-25 10:21:18,699 - core.platform - WARNING - [platform.py:105] - Database verification warning: 'NoneType' object is not callable
+2025-11-25 10:21:18,809 - core.platform - INFO - [platform.py:125] - Found 9150 available symbols
+2025-11-25 10:21:18,829 - core.platform - INFO - [platform.py:112] - Trading Platform initialized successfully
+2025-11-25 10:21:18 - Main - INFO - [main.py:173] - âœ… Plataforma inicializada correctamente
+2025-11-25 10:21:18 - Main - INFO - [monitoring.py:110] - Monitoring system started
+2025-11-25 10:21:18,877 - Main - INFO - [monitoring.py:110] - Monitoring system started
+2025-11-25 10:21:19 - Main - WARNING - [main.py:183] - Problemas detectados en health check inicial
+2025-11-25 10:21:19,169 - Main - WARNING - [main.py:183] - Problemas detectados en health check inicial
+2025-11-25 10:21:19 - Main - INFO - [main.py:190] - Ejecutando interfaz grÃ¡fica...
+2025-11-25 10:21:19,169 - Main - INFO - [main.py:190] - Ejecutando interfaz gráfica...
+2025-11-25 10:21:19 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: DLL load failed while importing QtCore: No se encontrÃ³ el proceso especificado.
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 4, in <module>
+    from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
+ImportError: DLL load failed while importing QtCore: No se encontrÃ³ el proceso especificado.
+2025-11-25 10:21:19,360 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: DLL load failed while importing QtCore: No se encontró el proceso especificado.
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 4, in <module>
+    from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
+ImportError: DLL load failed while importing QtCore: No se encontró el proceso especificado.
+2025-11-25 10:21:29 - Main - WARNING - [monitoring.py:118] - Monitoring thread did not stop cleanly
+2025-11-25 10:21:29,389 - Main - WARNING - [monitoring.py:118] - Monitoring thread did not stop cleanly
+2025-11-25 10:21:29,389 - core.platform - INFO - [platform.py:134] - Shutting down Trading Platform...
+2025-11-25 10:21:29,389 - data.mt5_connector - INFO - [mt5_connector.py:67] - MT5 disconnected
+2025-11-25 10:21:29,389 - core.platform - WARNING - [platform.py:148] - Error closing InfluxDB: 'NoneType' object has no attribute 'close'
+2025-11-25 10:21:29,394 - core.platform - INFO - [platform.py:173] - Platform state saved
+2025-11-25 10:21:29,394 - core.platform - INFO - [platform.py:154] - Trading Platform shut down successfully
+2025-11-25 10:28:22 - Main - INFO - [monitoring.py:93] - Logging system initialized for Main
+2025-11-25 10:28:22,524 - Main - INFO - [monitoring.py:93] - Logging system initialized for Main
+2025-11-25 10:28:22 - Main - INFO - [main.py:77] - Iniciando plataforma en modo: development
+2025-11-25 10:28:22,524 - Main - INFO - [main.py:77] - Iniciando plataforma en modo: development
+2025-11-25 10:28:26,734 - database.data_manager - WARNING - [data_manager.py:59] - PostgreSQL connection failed: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-11-25 10:28:26,735 - database.data_manager - WARNING - [data_manager.py:75] - InfluxDB connection failed: name 'InfluxDBClient' is not defined
+2025-11-25 10:28:26,749 - database.data_manager - INFO - [data_manager.py:88] - Redis connected successfully
+2025-11-25 10:28:26,749 - database.data_manager - INFO - [data_manager.py:93] - Database availability - Postgres: False, InfluxDB: False, Redis: True
+2025-11-25 10:28:26,749 - core.platform - INFO - [platform.py:49] - Trading Platform instance created successfully
+2025-11-25 10:28:26,749 - core.platform - INFO - [platform.py:75] - Initializing Trading Platform...
+2025-11-25 10:28:26,826 - data.mt5_connector - INFO - [mt5_connector.py:52] - MT5 connected successfully
+2025-11-25 10:28:26,989 - core.platform - INFO - [platform.py:81] - MT5 connection established on attempt 1
+2025-11-25 10:28:26,989 - core.platform - WARNING - [platform.py:105] - Database verification warning: 'NoneType' object is not callable
+2025-11-25 10:28:27,084 - core.platform - INFO - [platform.py:125] - Found 9150 available symbols
+2025-11-25 10:28:27,100 - core.platform - INFO - [platform.py:112] - Trading Platform initialized successfully
+2025-11-25 10:28:27 - Main - INFO - [main.py:173] - âœ… Plataforma inicializada correctamente
+2025-11-25 10:28:27 - Main - INFO - [monitoring.py:110] - Monitoring system started
+2025-11-25 10:28:27,115 - Main - INFO - [monitoring.py:110] - Monitoring system started
+2025-11-25 10:28:27 - Main - WARNING - [main.py:183] - Problemas detectados en health check inicial
+2025-11-25 10:28:27,355 - Main - WARNING - [main.py:183] - Problemas detectados en health check inicial
+2025-11-25 10:28:27 - Main - INFO - [main.py:190] - Ejecutando interfaz grÃ¡fica...
+2025-11-25 10:28:27,355 - Main - INFO - [main.py:190] - Ejecutando interfaz gráfica...
+2025-11-25 10:28:27 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: DLL load failed while importing QtCore: No se encontrÃ³ el proceso especificado.
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 4, in <module>
+    from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
+ImportError: DLL load failed while importing QtCore: No se encontrÃ³ el proceso especificado.
+2025-11-25 10:28:27,513 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: DLL load failed while importing QtCore: No se encontró el proceso especificado.
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 4, in <module>
+    from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
+ImportError: DLL load failed while importing QtCore: No se encontró el proceso especificado.
+2025-11-25 10:28:37 - Main - WARNING - [monitoring.py:118] - Monitoring thread did not stop cleanly
+2025-11-25 10:28:37,536 - Main - WARNING - [monitoring.py:118] - Monitoring thread did not stop cleanly
+2025-11-25 10:28:37,536 - core.platform - INFO - [platform.py:134] - Shutting down Trading Platform...
+2025-11-25 10:28:37,536 - data.mt5_connector - INFO - [mt5_connector.py:67] - MT5 disconnected
+2025-11-25 10:28:37,536 - core.platform - WARNING - [platform.py:148] - Error closing InfluxDB: 'NoneType' object has no attribute 'close'
+2025-11-25 10:28:37,536 - core.platform - INFO - [platform.py:173] - Platform state saved
+2025-11-25 10:28:37,536 - core.platform - INFO - [platform.py:154] - Trading Platform shut down successfully
+2025-11-25 11:10:36 - Main - INFO - [monitoring.py:93] - Logging system initialized for Main
+2025-11-25 11:10:36,165 - Main - INFO - [monitoring.py:93] - Logging system initialized for Main
+2025-11-25 11:10:36 - Main - INFO - [main.py:77] - Iniciando plataforma en modo: development
+2025-11-25 11:10:36,165 - Main - INFO - [main.py:77] - Iniciando plataforma en modo: development
+2025-11-25 11:10:40,312 - database.data_manager - WARNING - [data_manager.py:59] - PostgreSQL connection failed: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-11-25 11:10:40,312 - database.data_manager - WARNING - [data_manager.py:75] - InfluxDB connection failed: name 'InfluxDBClient' is not defined
+2025-11-25 11:10:40,327 - database.data_manager - INFO - [data_manager.py:88] - Redis connected successfully
+2025-11-25 11:10:40,327 - database.data_manager - INFO - [data_manager.py:93] - Database availability - Postgres: False, InfluxDB: False, Redis: True
+2025-11-25 11:10:40,327 - core.platform - INFO - [platform.py:49] - Trading Platform instance created successfully
+2025-11-25 11:10:40,327 - core.platform - INFO - [platform.py:75] - Initializing Trading Platform...
+2025-11-25 11:10:40,327 - data.mt5_connector - INFO - [mt5_connector.py:52] - MT5 connected successfully
+2025-11-25 11:10:40,518 - core.platform - INFO - [platform.py:81] - MT5 connection established on attempt 1
+2025-11-25 11:10:40,518 - core.platform - WARNING - [platform.py:105] - Database verification warning: 'NoneType' object is not callable
+2025-11-25 11:10:40,665 - core.platform - INFO - [platform.py:125] - Found 9150 available symbols
+2025-11-25 11:10:40,677 - core.platform - INFO - [platform.py:112] - Trading Platform initialized successfully
+2025-11-25 11:10:40 - Main - INFO - [main.py:173] - âœ… Plataforma inicializada correctamente
+2025-11-25 11:10:40 - Main - INFO - [monitoring.py:110] - Monitoring system started
+2025-11-25 11:10:40,677 - Main - INFO - [monitoring.py:110] - Monitoring system started
+2025-11-25 11:10:40 - Main - WARNING - [main.py:183] - Problemas detectados en health check inicial
+2025-11-25 11:10:40,903 - Main - WARNING - [main.py:183] - Problemas detectados en health check inicial
+2025-11-25 11:10:40 - Main - INFO - [main.py:190] - Ejecutando interfaz grÃ¡fica...
+2025-11-25 11:10:40,917 - Main - INFO - [main.py:190] - Ejecutando interfaz gráfica...
+2025-11-25 11:10:40 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: DLL load failed while importing QtCore: No se encontrÃ³ el proceso especificado.
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 4, in <module>
+    from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
+ImportError: DLL load failed while importing QtCore: No se encontrÃ³ el proceso especificado.
+2025-11-25 11:10:40,932 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: DLL load failed while importing QtCore: No se encontró el proceso especificado.
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 4, in <module>
+    from PyQt6.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget,
+ImportError: DLL load failed while importing QtCore: No se encontró el proceso especificado.
+2025-11-25 11:10:50 - Main - WARNING - [monitoring.py:118] - Monitoring thread did not stop cleanly
+2025-11-25 11:10:50,953 - Main - WARNING - [monitoring.py:118] - Monitoring thread did not stop cleanly
+2025-11-25 11:10:50,953 - core.platform - INFO - [platform.py:134] - Shutting down Trading Platform...
+2025-11-25 11:10:50,953 - data.mt5_connector - INFO - [mt5_connector.py:67] - MT5 disconnected
+2025-11-25 11:10:50,953 - core.platform - WARNING - [platform.py:148] - Error closing InfluxDB: 'NoneType' object has no attribute 'close'
+2025-11-25 11:10:50,953 - core.platform - INFO - [platform.py:173] - Platform state saved
+2025-11-25 11:10:50,953 - core.platform - INFO - [platform.py:154] - Trading Platform shut down successfully
+2025-11-25 11:15:29 - Main - INFO - [monitoring.py:93] - Logging system initialized for Main
+2025-11-25 11:15:29,173 - Main - INFO - [monitoring.py:93] - Logging system initialized for Main
+2025-11-25 11:15:29 - Main - INFO - [main.py:77] - Iniciando plataforma en modo: development
+2025-11-25 11:15:29,173 - Main - INFO - [main.py:77] - Iniciando plataforma en modo: development
+2025-11-25 11:15:33,325 - database.data_manager - WARNING - [data_manager.py:59] - PostgreSQL connection failed: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-11-25 11:15:33,325 - database.data_manager - WARNING - [data_manager.py:75] - InfluxDB connection failed: name 'InfluxDBClient' is not defined
+2025-11-25 11:15:33,340 - database.data_manager - INFO - [data_manager.py:88] - Redis connected successfully
+2025-11-25 11:15:33,340 - database.data_manager - INFO - [data_manager.py:93] - Database availability - Postgres: False, InfluxDB: False, Redis: True
+2025-11-25 11:15:33,340 - core.platform - INFO - [platform.py:49] - Trading Platform instance created successfully
+2025-11-25 11:15:33,340 - core.platform - INFO - [platform.py:75] - Initializing Trading Platform...
+2025-11-25 11:15:33,340 - data.mt5_connector - INFO - [mt5_connector.py:52] - MT5 connected successfully
+2025-11-25 11:15:33,531 - core.platform - INFO - [platform.py:81] - MT5 connection established on attempt 1
+2025-11-25 11:15:33,531 - core.platform - WARNING - [platform.py:105] - Database verification warning: 'NoneType' object is not callable
+2025-11-25 11:15:33,687 - core.platform - INFO - [platform.py:125] - Found 9150 available symbols
+2025-11-25 11:15:33,697 - core.platform - INFO - [platform.py:112] - Trading Platform initialized successfully
+2025-11-25 11:15:33 - Main - INFO - [main.py:173] - âœ… Plataforma inicializada correctamente
+2025-11-25 11:15:33 - Main - INFO - [monitoring.py:110] - Monitoring system started
+2025-11-25 11:15:33,701 - Main - INFO - [monitoring.py:110] - Monitoring system started
+2025-11-25 11:15:33 - Main - WARNING - [main.py:183] - Problemas detectados en health check inicial
+2025-11-25 11:15:33,943 - Main - WARNING - [main.py:183] - Problemas detectados en health check inicial
+2025-11-25 11:15:33 - Main - INFO - [main.py:190] - Ejecutando interfaz grÃ¡fica...
+2025-11-25 11:15:33,943 - Main - INFO - [main.py:190] - Ejecutando interfaz gráfica...
+2025-11-25 11:15:34 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: cannot import name 'QAction' from 'PyQt5.QtGui' (C:\Users\giova\AppData\Roaming\Python\Python312\site-packages\PyQt5\QtGui.pyd)
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 11, in <module>
+    from PyQt5.QtGui import QAction, QIcon, QFont
+ImportError: cannot import name 'QAction' from 'PyQt5.QtGui' (C:\Users\giova\AppData\Roaming\Python\Python312\site-packages\PyQt5\QtGui.pyd)
+2025-11-25 11:15:34,019 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: cannot import name 'QAction' from 'PyQt5.QtGui' (C:\Users\giova\AppData\Roaming\Python\Python312\site-packages\PyQt5\QtGui.pyd)
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 11, in <module>
+    from PyQt5.QtGui import QAction, QIcon, QFont
+ImportError: cannot import name 'QAction' from 'PyQt5.QtGui' (C:\Users\giova\AppData\Roaming\Python\Python312\site-packages\PyQt5\QtGui.pyd)
+2025-11-25 11:15:44 - Main - WARNING - [monitoring.py:118] - Monitoring thread did not stop cleanly
+2025-11-25 11:15:44,042 - Main - WARNING - [monitoring.py:118] - Monitoring thread did not stop cleanly
+2025-11-25 11:15:44,042 - core.platform - INFO - [platform.py:134] - Shutting down Trading Platform...
+2025-11-25 11:15:44,042 - data.mt5_connector - INFO - [mt5_connector.py:67] - MT5 disconnected
+2025-11-25 11:15:44,042 - core.platform - WARNING - [platform.py:148] - Error closing InfluxDB: 'NoneType' object has no attribute 'close'
+2025-11-25 11:15:44,042 - core.platform - INFO - [platform.py:173] - Platform state saved
+2025-11-25 11:15:44,042 - core.platform - INFO - [platform.py:154] - Trading Platform shut down successfully
+2025-11-25 11:26:58 - Main - INFO - [monitoring.py:93] - Logging system initialized for Main
+2025-11-25 11:26:58,533 - Main - INFO - [monitoring.py:93] - Logging system initialized for Main
+2025-11-25 11:26:58 - Main - INFO - [main.py:77] - Iniciando plataforma en modo: development
+2025-11-25 11:26:58,533 - Main - INFO - [main.py:77] - Iniciando plataforma en modo: development
+2025-11-25 11:27:02,698 - database.data_manager - WARNING - [data_manager.py:59] - PostgreSQL connection failed: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-11-25 11:27:02,698 - database.data_manager - WARNING - [data_manager.py:75] - InfluxDB connection failed: name 'InfluxDBClient' is not defined
+2025-11-25 11:27:02,714 - database.data_manager - INFO - [data_manager.py:88] - Redis connected successfully
+2025-11-25 11:27:02,714 - database.data_manager - INFO - [data_manager.py:93] - Database availability - Postgres: False, InfluxDB: False, Redis: True
+2025-11-25 11:27:02,714 - core.platform - INFO - [platform.py:49] - Trading Platform instance created successfully
+2025-11-25 11:27:02,714 - core.platform - INFO - [platform.py:75] - Initializing Trading Platform...
+2025-11-25 11:27:02,714 - data.mt5_connector - INFO - [mt5_connector.py:52] - MT5 connected successfully
+2025-11-25 11:27:02,890 - core.platform - INFO - [platform.py:81] - MT5 connection established on attempt 1
+2025-11-25 11:27:02,890 - core.platform - WARNING - [platform.py:105] - Database verification warning: 'NoneType' object is not callable
+2025-11-25 11:27:03,009 - core.platform - INFO - [platform.py:125] - Found 9150 available symbols
+2025-11-25 11:27:03,018 - core.platform - INFO - [platform.py:112] - Trading Platform initialized successfully
+2025-11-25 11:27:03 - Main - INFO - [main.py:173] - âœ… Plataforma inicializada correctamente
+2025-11-25 11:27:03 - Main - INFO - [monitoring.py:110] - Monitoring system started
+2025-11-25 11:27:03,018 - Main - INFO - [monitoring.py:110] - Monitoring system started
+2025-11-25 11:27:03 - Main - WARNING - [main.py:183] - Problemas detectados en health check inicial
+2025-11-25 11:27:03,241 - Main - WARNING - [main.py:183] - Problemas detectados en health check inicial
+2025-11-25 11:27:03 - Main - INFO - [main.py:190] - Ejecutando interfaz grÃ¡fica...
+2025-11-25 11:27:03,256 - Main - INFO - [main.py:190] - Ejecutando interfaz gráfica...
+2025-11-25 11:27:03 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: No module named 'PyQt5.QtCharts'
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 13, in <module>
+    from PyQt5.QtCharts import QChart, QChartView, QLineSeries, QDateTimeAxis, QValueAxis
+ModuleNotFoundError: No module named 'PyQt5.QtCharts'
+2025-11-25 11:27:03,288 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: No module named 'PyQt5.QtCharts'
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 13, in <module>
+    from PyQt5.QtCharts import QChart, QChartView, QLineSeries, QDateTimeAxis, QValueAxis
+ModuleNotFoundError: No module named 'PyQt5.QtCharts'
+2025-11-25 11:27:13 - Main - WARNING - [monitoring.py:118] - Monitoring thread did not stop cleanly
+2025-11-25 11:27:13,306 - Main - WARNING - [monitoring.py:118] - Monitoring thread did not stop cleanly
+2025-11-25 11:27:13,306 - core.platform - INFO - [platform.py:134] - Shutting down Trading Platform...
+2025-11-25 11:27:13,306 - data.mt5_connector - INFO - [mt5_connector.py:67] - MT5 disconnected
+2025-11-25 11:27:13,306 - core.platform - WARNING - [platform.py:148] - Error closing InfluxDB: 'NoneType' object has no attribute 'close'
+2025-11-25 11:27:13,306 - core.platform - INFO - [platform.py:173] - Platform state saved
+2025-11-25 11:27:13,306 - core.platform - INFO - [platform.py:154] - Trading Platform shut down successfully
+2025-11-25 11:34:48 - Main - INFO - [monitoring.py:93] - Logging system initialized for Main
+2025-11-25 11:34:48,271 - Main - INFO - [monitoring.py:93] - Logging system initialized for Main
+2025-11-25 11:34:48 - Main - INFO - [main.py:77] - Iniciando plataforma en modo: development
+2025-11-25 11:34:48,271 - Main - INFO - [main.py:77] - Iniciando plataforma en modo: development
+2025-11-25 11:34:52,415 - database.data_manager - WARNING - [data_manager.py:59] - PostgreSQL connection failed: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-11-25 11:34:52,415 - database.data_manager - WARNING - [data_manager.py:75] - InfluxDB connection failed: name 'InfluxDBClient' is not defined
+2025-11-25 11:34:52,415 - database.data_manager - INFO - [data_manager.py:88] - Redis connected successfully
+2025-11-25 11:34:52,415 - database.data_manager - INFO - [data_manager.py:93] - Database availability - Postgres: False, InfluxDB: False, Redis: True
+2025-11-25 11:34:52,415 - core.platform - INFO - [platform.py:49] - Trading Platform instance created successfully
+2025-11-25 11:34:52,415 - core.platform - INFO - [platform.py:75] - Initializing Trading Platform...
+2025-11-25 11:34:52,431 - data.mt5_connector - INFO - [mt5_connector.py:52] - MT5 connected successfully
+2025-11-25 11:34:52,654 - core.platform - INFO - [platform.py:81] - MT5 connection established on attempt 1
+2025-11-25 11:34:52,654 - core.platform - WARNING - [platform.py:105] - Database verification warning: 'NoneType' object is not callable
+2025-11-25 11:34:52,773 - core.platform - INFO - [platform.py:125] - Found 9150 available symbols
+2025-11-25 11:34:52,789 - core.platform - INFO - [platform.py:112] - Trading Platform initialized successfully
+2025-11-25 11:34:52 - Main - INFO - [main.py:173] - âœ… Plataforma inicializada correctamente
+2025-11-25 11:34:52 - Main - INFO - [monitoring.py:110] - Monitoring system started
+2025-11-25 11:34:52,789 - Main - INFO - [monitoring.py:110] - Monitoring system started
+2025-11-25 11:34:53 - Main - WARNING - [main.py:183] - Problemas detectados en health check inicial
+2025-11-25 11:34:53,025 - Main - WARNING - [main.py:183] - Problemas detectados en health check inicial
+2025-11-25 11:34:53 - Main - INFO - [main.py:190] - Ejecutando interfaz grÃ¡fica...
+2025-11-25 11:34:53,026 - Main - INFO - [main.py:190] - Ejecutando interfaz gráfica...
+2025-11-25 11:34:53 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: No module named 'PyQtChart'
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 13, in <module>
+    from PyQtChart.QtChart import QChart, QChartView, QLineSeries, QDateTimeAxis, QValueAxis
+ModuleNotFoundError: No module named 'PyQtChart'
+2025-11-25 11:34:53,074 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: No module named 'PyQtChart'
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 13, in <module>
+    from PyQtChart.QtChart import QChart, QChartView, QLineSeries, QDateTimeAxis, QValueAxis
+ModuleNotFoundError: No module named 'PyQtChart'
+2025-11-25 11:35:03 - Main - WARNING - [monitoring.py:118] - Monitoring thread did not stop cleanly
+2025-11-25 11:35:03,082 - Main - WARNING - [monitoring.py:118] - Monitoring thread did not stop cleanly
+2025-11-25 11:35:03,082 - core.platform - INFO - [platform.py:134] - Shutting down Trading Platform...
+2025-11-25 11:35:03,082 - data.mt5_connector - INFO - [mt5_connector.py:67] - MT5 disconnected
+2025-11-25 11:35:03,082 - core.platform - WARNING - [platform.py:148] - Error closing InfluxDB: 'NoneType' object has no attribute 'close'
+2025-11-25 11:35:03,084 - core.platform - INFO - [platform.py:173] - Platform state saved
+2025-11-25 11:35:03,084 - core.platform - INFO - [platform.py:154] - Trading Platform shut down successfully
+2025-11-25 11:38:32,115 - database.data_manager - WARNING - [data_manager.py:59] - PostgreSQL connection failed: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-11-25 11:38:32,115 - database.data_manager - WARNING - [data_manager.py:75] - InfluxDB connection failed: name 'InfluxDBClient' is not defined
+2025-11-25 11:38:32,120 - database.data_manager - INFO - [data_manager.py:88] - Redis connected successfully
+2025-11-25 11:38:32,120 - database.data_manager - INFO - [data_manager.py:93] - Database availability - Postgres: False, InfluxDB: False, Redis: True
+2025-11-25 11:38:32,120 - core.platform - INFO - [platform.py:49] - Trading Platform instance created successfully
+2025-11-25 11:38:32,120 - core.platform - INFO - [platform.py:75] - Initializing Trading Platform...
+2025-11-25 11:38:32,120 - data.mt5_connector - INFO - [mt5_connector.py:52] - MT5 connected successfully
+2025-11-25 11:38:32,276 - core.platform - INFO - [platform.py:81] - MT5 connection established on attempt 1
+2025-11-25 11:38:32,278 - core.platform - WARNING - [platform.py:105] - Database verification warning: 'NoneType' object is not callable
+2025-11-25 11:38:32,383 - core.platform - INFO - [platform.py:125] - Found 9150 available symbols
+2025-11-25 11:38:32,386 - core.platform - INFO - [platform.py:112] - Trading Platform initialized successfully
+2025-11-25 11:42:45,687 - core.platform - INFO - [platform.py:216] - Retrieved and cached 1533 bars for EURUSD H1
+2025-11-25 11:42:46,552 - strategies.strategy_engine - INFO - [strategy_engine.py:285] - Estrategia creada: Demo MA (ma_crossover)
+2025-11-25 11:42:46,600 - backtesting.backtest_engine - INFO - [backtest_engine.py:96] - Iniciando backtest para Demo MA
+2025-11-25 11:42:46,846 - backtesting.backtest_engine - INFO - [backtest_engine.py:139] - Backtest completado: -0.17% de retorno
+2025-11-25 11:46:12,599 - database.data_manager - WARNING - [data_manager.py:59] - PostgreSQL connection failed: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-11-25 11:46:12,599 - database.data_manager - WARNING - [data_manager.py:75] - InfluxDB connection failed: name 'InfluxDBClient' is not defined
+2025-11-25 11:46:12,615 - database.data_manager - INFO - [data_manager.py:88] - Redis connected successfully
+2025-11-25 11:46:12,615 - database.data_manager - INFO - [data_manager.py:93] - Database availability - Postgres: False, InfluxDB: False, Redis: True
+2025-11-25 11:46:12,615 - core.platform - INFO - [platform.py:49] - Trading Platform instance created successfully
+2025-11-25 11:46:12,615 - core.platform - INFO - [platform.py:75] - Initializing Trading Platform...
+2025-11-25 11:46:12,615 - data.mt5_connector - INFO - [mt5_connector.py:52] - MT5 connected successfully
+2025-11-25 11:46:12,751 - core.platform - INFO - [platform.py:81] - MT5 connection established on attempt 1
+2025-11-25 11:46:12,751 - core.platform - WARNING - [platform.py:105] - Database verification warning: 'NoneType' object is not callable
+2025-11-25 11:46:12,843 - core.platform - INFO - [platform.py:125] - Found 9150 available symbols
+2025-11-25 11:46:12,843 - core.platform - INFO - [platform.py:112] - Trading Platform initialized successfully
+2025-11-25 11:46:16,360 - strategies.strategy_engine - INFO - [strategy_engine.py:285] - Estrategia creada: Demo MA (ma_crossover)
+2025-11-25 11:46:16,380 - backtesting.backtest_engine - INFO - [backtest_engine.py:96] - Iniciando backtest para Demo MA
+2025-11-25 11:46:16,574 - backtesting.backtest_engine - INFO - [backtest_engine.py:139] - Backtest completado: -0.17% de retorno
+2025-11-25 12:28:13,595 - database.data_manager - WARNING - [data_manager.py:59] - PostgreSQL connection failed: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-11-25 12:28:13,595 - database.data_manager - WARNING - [data_manager.py:75] - InfluxDB connection failed: name 'InfluxDBClient' is not defined
+2025-11-25 12:28:13,611 - database.data_manager - INFO - [data_manager.py:88] - Redis connected successfully
+2025-11-25 12:28:13,611 - database.data_manager - INFO - [data_manager.py:93] - Database availability - Postgres: False, InfluxDB: False, Redis: True
+2025-11-25 12:28:13,611 - core.platform - INFO - [platform.py:49] - Trading Platform instance created successfully
+2025-11-25 12:28:13,611 - core.platform - INFO - [platform.py:75] - Initializing Trading Platform...
+2025-11-25 12:28:13,611 - data.mt5_connector - INFO - [mt5_connector.py:52] - MT5 connected successfully
+2025-11-25 12:28:13,754 - core.platform - INFO - [platform.py:81] - MT5 connection established on attempt 1
+2025-11-25 12:28:13,755 - core.platform - WARNING - [platform.py:105] - Database verification warning: 'NoneType' object is not callable
+2025-11-25 12:28:13,886 - core.platform - INFO - [platform.py:125] - Found 9150 available symbols
+2025-11-25 12:28:13,897 - core.platform - INFO - [platform.py:112] - Trading Platform initialized successfully
+2025-11-25 12:28:18,844 - core.platform - INFO - [platform.py:216] - Retrieved and cached 6197 bars for GBPUSD H1
+2025-11-25 12:28:18,932 - core.platform - INFO - [platform.py:216] - Retrieved and cached 6198 bars for USDJPY H1
+2025-11-25 12:28:33,864 - ml.ml_engine - INFO - [ml_engine.py:532] - Entrenando modelo xgboost para price_direction
+2025-11-25 12:28:34,521 - ml.ml_engine - INFO - [ml_engine.py:618] - Modelo xgboost_price_direction entrenado. Accuracy: 0.500
+2025-11-25 12:28:34,527 - ml.ml_engine - INFO - [ml_engine.py:532] - Entrenando modelo xgboost para price_direction
+2025-11-25 12:28:35,614 - ml.ml_engine - INFO - [ml_engine.py:618] - Modelo xgboost_price_direction entrenado. Accuracy: 0.499
+2025-11-25 12:28:35,619 - ml.ml_engine - INFO - [ml_engine.py:532] - Entrenando modelo xgboost para price_direction
+2025-11-25 12:28:36,634 - ml.ml_engine - INFO - [ml_engine.py:618] - Modelo xgboost_price_direction entrenado. Accuracy: 0.498
+2025-11-25 12:28:36,835 - strategies.strategy_engine - INFO - [strategy_engine.py:285] - Estrategia creada: AutoGen_macd_1 (macd)
+2025-11-25 12:28:36,835 - strategies.strategy_engine - INFO - [strategy_engine.py:285] - Estrategia creada: AutoGen_macd_2 (macd)
+2025-11-25 12:28:36,835 - strategies.strategy_engine - INFO - [strategy_engine.py:285] - Estrategia creada: AutoGen_ma_crossover_3 (ma_crossover)
+2025-11-25 12:28:36,835 - strategies.strategy_engine - INFO - [strategy_engine.py:285] - Estrategia creada: AutoGen_ma_crossover_4 (ma_crossover)
+2025-11-25 12:28:36,835 - strategies.strategy_engine - INFO - [strategy_engine.py:285] - Estrategia creada: AutoGen_rsi_5 (rsi)
+2025-11-25 12:28:36,899 - optimization.genetic_optimizer - INFO - [genetic_optimizer.py:38] - Iniciando optimización genética para AutoGen_macd_1
