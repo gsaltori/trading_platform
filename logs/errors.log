@@ -207,3 +207,10 @@ Traceback (most recent call last):
   File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 13, in <module>
     from PyQtChart.QtChart import QChart, QChartView, QLineSeries, QDateTimeAxis, QValueAxis
 ModuleNotFoundError: No module named 'PyQtChart'
+2025-11-27 09:49:25 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: No module named 'PyQtChart'
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 13, in <module>
+    from PyQtChart.QtChart import QChart, QChartView, QLineSeries, QDateTimeAxis, QValueAxis
+ModuleNotFoundError: No module named 'PyQtChart'

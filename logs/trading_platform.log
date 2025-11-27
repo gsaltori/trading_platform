@@ -4351,3 +4351,37 @@ connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection re
 2025-11-26 10:01:56,861 - backtesting.backtest_engine - INFO - [backtest_engine.py:139] - Backtest completado: 0.29% de retorno
 2025-11-26 10:01:56,877 - backtesting.backtest_engine - INFO - [backtest_engine.py:96] - Iniciando backtest para Random_ma_crossover_20_AUDUSD
 2025-11-26 10:01:57,005 - backtesting.backtest_engine - INFO - [backtest_engine.py:139] - Backtest completado: 1.26% de retorno
+2025-11-27 09:49:20,598 - Main - INFO - [monitoring.py:93] - Logging system initialized for Main
+2025-11-27 09:49:20,646 - Main - INFO - [main.py:77] - Iniciando plataforma en modo: development
+2025-11-27 09:49:24,839 - database.data_manager - WARNING - [data_manager.py:59] - PostgreSQL connection failed: (psycopg2.OperationalError) connection to server at "localhost" (::1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+connection to server at "localhost" (127.0.0.1), port 5432 failed: Connection refused (0x0000274D/10061)
+	Is the server running on that host and accepting TCP/IP connections?
+
+(Background on this error at: https://sqlalche.me/e/20/e3q8)
+2025-11-27 09:49:24,840 - database.data_manager - WARNING - [data_manager.py:75] - InfluxDB connection failed: name 'InfluxDBClient' is not defined
+2025-11-27 09:49:24,909 - database.data_manager - INFO - [data_manager.py:88] - Redis connected successfully
+2025-11-27 09:49:24,909 - database.data_manager - INFO - [data_manager.py:93] - Database availability - Postgres: False, InfluxDB: False, Redis: True
+2025-11-27 09:49:24,909 - core.platform - INFO - [platform.py:49] - Trading Platform instance created successfully
+2025-11-27 09:49:24,909 - core.platform - INFO - [platform.py:75] - Initializing Trading Platform...
+2025-11-27 09:49:24,909 - data.mt5_connector - INFO - [mt5_connector.py:52] - MT5 connected successfully
+2025-11-27 09:49:25,094 - core.platform - INFO - [platform.py:81] - MT5 connection established on attempt 1
+2025-11-27 09:49:25,094 - core.platform - WARNING - [platform.py:105] - Database verification warning: 'NoneType' object is not callable
+2025-11-27 09:49:25,229 - core.platform - INFO - [platform.py:125] - Found 9146 available symbols
+2025-11-27 09:49:25,241 - core.platform - INFO - [platform.py:112] - Trading Platform initialized successfully
+2025-11-27 09:49:25,249 - Main - INFO - [monitoring.py:110] - Monitoring system started
+2025-11-27 09:49:25,490 - Main - WARNING - [main.py:183] - Problemas detectados en health check inicial
+2025-11-27 09:49:25,513 - Main - INFO - [main.py:190] - Ejecutando interfaz gráfica...
+2025-11-27 09:49:25,744 - Main - ERROR - [main.py:195] - Error ejecutando plataforma: No module named 'PyQtChart'
+Traceback (most recent call last):
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\main.py", line 191, in run_platform
+    from ui.main_window import run_gui
+  File "C:\Users\giova\OneDrive\Escritorio\personal\trading\python\trading_platform\ui\main_window.py", line 13, in <module>
+    from PyQtChart.QtChart import QChart, QChartView, QLineSeries, QDateTimeAxis, QValueAxis
+ModuleNotFoundError: No module named 'PyQtChart'
+2025-11-27 09:49:35,781 - Main - WARNING - [monitoring.py:118] - Monitoring thread did not stop cleanly
+2025-11-27 09:49:35,783 - core.platform - INFO - [platform.py:134] - Shutting down Trading Platform...
+2025-11-27 09:49:35,783 - data.mt5_connector - INFO - [mt5_connector.py:67] - MT5 disconnected
+2025-11-27 09:49:35,783 - core.platform - WARNING - [platform.py:148] - Error closing InfluxDB: 'NoneType' object has no attribute 'close'
+2025-11-27 09:49:35,785 - core.platform - INFO - [platform.py:173] - Platform state saved
+2025-11-27 09:49:35,785 - core.platform - INFO - [platform.py:154] - Trading Platform shut down successfully
