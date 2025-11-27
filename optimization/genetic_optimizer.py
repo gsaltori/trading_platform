@@ -1,21 +1,43 @@
 # optimization/genetic_optimizer.py
+"""
+Genetic optimization for trading strategies.
+
+Provides genetic algorithms, Bayesian optimization, and multi-objective optimization.
+"""
+
 import numpy as np
 import pandas as pd
-from typing import Dict, List, Optional, Tuple, Any, Callable
+from typing import Dict, List, Optional, Tuple, Any
 from dataclasses import dataclass, field
 import logging
 import random
-from concurrent.futures import ProcessPoolExecutor, as_completed
-from deap import base, creator, tools, algorithms
 import multiprocessing as mp
 
 logger = logging.getLogger(__name__)
 
+# Try to import DEAP
+DEAP_AVAILABLE = False
+try:
+    from deap import base, creator, tools, algorithms
+    DEAP_AVAILABLE = True
+except ImportError:
+    logger.info("DEAP not available, using basic optimization")
+
+# Try to import bayesian optimization
+BAYESIAN_AVAILABLE = False
+try:
+    from bayes_opt import BayesianOptimization
+    BAYESIAN_AVAILABLE = True
+except ImportError:
+    logger.info("Bayesian optimization not available")
+
+
 @dataclass
 class OptimizationConfig:
+    """Configuration for optimization."""
     strategy_name: str
     parameter_ranges: Dict[str, Tuple[float, float]]
-    objective: str  # 'sharpe', 'profit_factor', 'total_return', 'custom'
+    objective: str = 'sharpe'  # 'sharpe', 'profit_factor', 'total_return', 'custom'
     population_size: int = 100
     generations: int = 50
     crossover_prob: float = 0.8
@@ -24,32 +46,71 @@ class OptimizationConfig:
     hall_of_fame_size: int = 10
     n_workers: int = -1
 
+
 class GeneticOptimizer:
-    """Optimizador genético mejorado para estrategias de trading"""
+    """Genetic optimizer for trading strategies."""
     
     def __init__(self, backtest_engine):
         self.backtest_engine = backtest_engine
         self.hall_of_fame = []
         self.optimization_history = []
+    
+    def optimize_strategy(
+        self, 
+        strategy, 
+        data: pd.DataFrame,
+        config: OptimizationConfig
+    ) -> Dict[str, Any]:
+        """Optimize strategy using genetic algorithm."""
+        logger.info(f"Starting genetic optimization for {config.strategy_name}")
         
-    def optimize_strategy(self, strategy, data: pd.DataFrame, 
-                         config: OptimizationConfig) -> Dict[str, Any]:
-        """Optimizar estrategia usando algoritmo genético"""
-        logger.info(f"Iniciando optimización genética para {config.strategy_name}")
+        if not DEAP_AVAILABLE:
+            return self._basic_optimization(strategy, data, config)
         
-        # Configurar DEAP
-        self._setup_deap(config.objective)
+        try:
+            return self._deap_optimization(strategy, data, config)
+        except Exception as e:
+            logger.warning(f"DEAP optimization failed: {e}, falling back to basic")
+            return self._basic_optimization(strategy, data, config)
+    
+    def _deap_optimization(
+        self, 
+        strategy, 
+        data: pd.DataFrame,
+        config: OptimizationConfig
+    ) -> Dict[str, Any]:
+        """Optimization using DEAP library."""
+        # Setup DEAP
+        if hasattr(creator, 'FitnessMax'):
+            del creator.FitnessMax
+        if hasattr(creator, 'Individual'):
+            del creator.Individual
         
-        # Crear toolbox
+        creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+        creator.create("Individual", list, fitness=creator.FitnessMax)
+        
         toolbox = base.Toolbox()
         
-        # Registrar funciones
-        self._register_functions(toolbox, strategy, data, config)
+        # Register functions
+        param_count = len(config.parameter_ranges)
+        toolbox.register("attr_float", random.uniform, 0, 1)
+        toolbox.register("individual", tools.initRepeat, 
+                        creator.Individual, toolbox.attr_float, param_count)
+        toolbox.register("population", tools.initRepeat, list, toolbox.individual)
         
-        # Crear población inicial
+        # Evaluation function
+        def evaluate(individual):
+            return self._evaluate_individual(individual, strategy, data, config)
+        
+        toolbox.register("evaluate", evaluate)
+        toolbox.register("mate", tools.cxBlend, alpha=0.5)
+        toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=0.1, indpb=0.2)
+        toolbox.register("select", tools.selTournament, tournsize=config.tournament_size)
+        
+        # Create population
         population = toolbox.population(n=config.population_size)
         
-        # Estadísticas
+        # Statistics
         stats = tools.Statistics(lambda ind: ind.fitness.values[0])
         stats.register("avg", np.mean)
         stats.register("std", np.std)
@@ -59,7 +120,7 @@ class GeneticOptimizer:
         # Hall of Fame
         hof = tools.HallOfFame(config.hall_of_fame_size)
         
-        # Ejecutar algoritmo genético
+        # Run genetic algorithm
         population, logbook = algorithms.eaSimple(
             population, toolbox,
             cxpb=config.crossover_prob,
@@ -70,7 +131,7 @@ class GeneticOptimizer:
             verbose=True
         )
         
-        # Guardar resultados
+        # Get best results
         best_individual = hof[0]
         best_params = self._decode_individual(best_individual, config.parameter_ranges)
         best_fitness = best_individual.fitness.values[0]
@@ -85,62 +146,65 @@ class GeneticOptimizer:
                 }
                 for ind in hof
             ],
-            'optimization_history': logbook,
+            'optimization_history': [dict(gen) for gen in logbook],
             'generations': config.generations,
             'population_size': config.population_size
         }
         
-        logger.info(f"Optimización completada. Mejor fitness: {best_fitness:.4f}")
+        logger.info(f"Optimization completed. Best fitness: {best_fitness:.4f}")
         return result
     
-    def _setup_deap(self, objective: str):
-        """Configurar DEAP para maximización o minimización"""
-        if objective in ['sharpe', 'profit_factor', 'total_return']:
-            # Maximizar
-            creator.create("FitnessMax", base.Fitness, weights=(1.0,))
-            creator.create("Individual", list, fitness=creator.FitnessMax)
-        else:
-            # Minimizar (para drawdown, etc.)
-            creator.create("FitnessMin", base.Fitness, weights=(-1.0,))
-            creator.create("Individual", list, fitness=creator.FitnessMin)
+    def _basic_optimization(
+        self, 
+        strategy, 
+        data: pd.DataFrame,
+        config: OptimizationConfig
+    ) -> Dict[str, Any]:
+        """Basic random search optimization when DEAP is not available."""
+        logger.info("Using basic random search optimization")
+        
+        best_params = None
+        best_fitness = -np.inf
+        
+        n_iterations = config.population_size * config.generations
+        
+        for i in range(n_iterations):
+            # Generate random individual
+            individual = [random.uniform(0, 1) for _ in range(len(config.parameter_ranges))]
+            fitness = self._evaluate_individual(individual, strategy, data, config)[0]
+            
+            if fitness > best_fitness:
+                best_fitness = fitness
+                best_params = self._decode_individual(individual, config.parameter_ranges)
+            
+            if (i + 1) % 100 == 0:
+                logger.info(f"Iteration {i+1}/{n_iterations}, best fitness: {best_fitness:.4f}")
+        
+        return {
+            'best_parameters': best_params,
+            'best_fitness': best_fitness,
+            'hall_of_fame': [{'parameters': best_params, 'fitness': best_fitness}],
+            'optimization_history': [],
+            'generations': config.generations,
+            'population_size': config.population_size
+        }
     
-    def _register_functions(self, toolbox, strategy, data, config):
-        """Registrar funciones en DEAP toolbox"""
-        # Función de evaluación
-        toolbox.register("evaluate", self._evaluate_individual, 
-                        strategy=strategy, data=data, config=config)
-        
-        # Función para crear individuo
-        param_count = len(config.parameter_ranges)
-        toolbox.register("attr_float", random.uniform, 0, 1)
-        toolbox.register("individual", tools.initRepeat, 
-                        creator.Individual, toolbox.attr_float, param_count)
-        toolbox.register("population", tools.initRepeat, list, toolbox.individual)
-        
-        # Operadores genéticos
-        toolbox.register("mate", tools.cxBlend, alpha=0.5)
-        toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=0.1, indpb=0.2)
-        toolbox.register("select", tools.selTournament, tournsize=config.tournament_size)
-        
-        # Paralelización
-        if config.n_workers == -1:
-            config.n_workers = mp.cpu_count()
-        
-        if config.n_workers > 1:
-            pool = mp.Pool(config.n_workers)
-            toolbox.register("map", pool.map)
-    
-    def _evaluate_individual(self, individual: list, strategy: Any, 
-                           data: pd.DataFrame, config: OptimizationConfig) -> Tuple[float]:
-        """Evaluar un individuo (conjunto de parámetros)"""
+    def _evaluate_individual(
+        self, 
+        individual: list, 
+        strategy: Any,
+        data: pd.DataFrame, 
+        config: OptimizationConfig
+    ) -> Tuple[float]:
+        """Evaluate an individual (parameter set)."""
         try:
-            # Decodificar parámetros
+            # Decode parameters
             params = self._decode_individual(individual, config.parameter_ranges)
             
-            # Actualizar estrategia con nuevos parámetros
+            # Update strategy with new parameters
             strategy.config.parameters.update(params)
             
-            # Ejecutar backtest
+            # Run backtest
             result = self.backtest_engine.run_backtest(
                 data=data,
                 strategy=strategy,
@@ -149,42 +213,49 @@ class GeneticOptimizer:
                 slippage_model="dynamic"
             )
             
-            # Calcular fitness según objetivo
+            # Calculate fitness
             fitness = self._calculate_fitness(result, config.objective)
             
             return (fitness,)
             
         except Exception as e:
-            logger.warning(f"Error evaluando individuo: {e}")
-            return (-np.inf,) if config.objective in ['sharpe', 'profit_factor', 'total_return'] else (np.inf,)
+            logger.warning(f"Error evaluating individual: {e}")
+            return (-np.inf,)
     
-    def _decode_individual(self, individual: list, 
-                          parameter_ranges: Dict[str, Tuple[float, float]]) -> Dict[str, float]:
-        """Decodificar individuo a parámetros reales"""
+    def _decode_individual(
+        self, 
+        individual: list,
+        parameter_ranges: Dict[str, Tuple[float, float]]
+    ) -> Dict[str, Any]:
+        """Decode individual to actual parameters."""
         params = {}
         param_names = list(parameter_ranges.keys())
         
         for i, param_name in enumerate(param_names):
+            if i >= len(individual):
+                break
+            
             min_val, max_val = parameter_ranges[param_name]
             
-            # Escalar de [0, 1] a [min_val, max_val]
+            # Scale from [0, 1] to [min_val, max_val]
             if param_name.endswith('_int'):
-                # Parámetro entero
+                # Integer parameter
                 value = int(min_val + individual[i] * (max_val - min_val))
                 params[param_name.replace('_int', '')] = value
             else:
-                # Parámetro float
+                # Float parameter
                 value = min_val + individual[i] * (max_val - min_val)
                 params[param_name] = round(value, 4)
         
         return params
     
     def _calculate_fitness(self, backtest_result: Any, objective: str) -> float:
-        """Calcular valor de fitness según objetivo"""
+        """Calculate fitness value based on objective."""
         if objective == 'sharpe':
             return backtest_result.sharpe_ratio or -10
         elif objective == 'profit_factor':
-            return backtest_result.profit_factor or -10
+            pf = backtest_result.profit_factor
+            return pf if pf and pf != float('inf') else -10
         elif objective == 'total_return':
             return backtest_result.total_return
         elif objective == 'win_rate':
@@ -196,126 +267,175 @@ class GeneticOptimizer:
         else:
             return backtest_result.sharpe_ratio or -10
 
+
 class BayesianOptimizer:
-    """Optimización bayesiana para parámetros de estrategias"""
+    """Bayesian optimization for strategy parameters."""
     
     def __init__(self, backtest_engine):
         self.backtest_engine = backtest_engine
-        
-    def optimize(self, strategy, data: pd.DataFrame, 
-                parameter_ranges: Dict[str, Tuple[float, float]],
-                n_iter: int = 100, init_points: int = 10) -> Dict[str, Any]:
-        """Optimizar usando Bayesian Optimization"""
-        from bayes_opt import BayesianOptimization
-        from bayes_opt.util import UtilityFunction
+    
+    def optimize(
+        self, 
+        strategy, 
+        data: pd.DataFrame,
+        parameter_ranges: Dict[str, Tuple[float, float]],
+        n_iter: int = 100, 
+        init_points: int = 10
+    ) -> Dict[str, Any]:
+        """Optimize using Bayesian Optimization."""
+        if not BAYESIAN_AVAILABLE:
+            logger.warning("Bayesian optimization not available")
+            return {'best_parameters': {}, 'best_fitness': -np.inf}
         
         def black_box_function(**params):
-            """Función a optimizar"""
+            """Function to optimize."""
             try:
-                # Actualizar estrategia
-                strategy.config.parameters.update(params)
+                # Convert float params to int where needed
+                converted_params = {}
+                for key, value in params.items():
+                    if key.endswith('_int'):
+                        converted_params[key.replace('_int', '')] = int(value)
+                    else:
+                        converted_params[key] = value
                 
-                # Ejecutar backtest
+                strategy.config.parameters.update(converted_params)
+                
                 result = self.backtest_engine.run_backtest(
                     data=data, strategy=strategy, symbol='OPTIMIZE'
                 )
                 
-                # Retornar Sharpe ratio (o otra métrica)
                 return result.sharpe_ratio or -10
                 
             except Exception as e:
-                logger.warning(f"Error en evaluación bayesiana: {e}")
+                logger.warning(f"Error in Bayesian evaluation: {e}")
                 return -10
         
-        # Crear optimizador
-        optimizer = BayesianOptimization(
-            f=black_box_function,
-            pbounds=parameter_ranges,
-            random_state=42,
-            verbose=2
-        )
-        
-        # Optimizar
-        optimizer.maximize(
-            init_points=init_points,
-            n_iter=n_iter,
-        )
-        
-        return {
-            'best_parameters': optimizer.max['params'],
-            'best_fitness': optimizer.max['target'],
-            'optimization_history': optimizer.res
-        }
+        try:
+            optimizer = BayesianOptimization(
+                f=black_box_function,
+                pbounds=parameter_ranges,
+                random_state=42,
+                verbose=2
+            )
+            
+            optimizer.maximize(
+                init_points=init_points,
+                n_iter=n_iter,
+            )
+            
+            return {
+                'best_parameters': optimizer.max['params'],
+                'best_fitness': optimizer.max['target'],
+                'optimization_history': optimizer.res
+            }
+        except Exception as e:
+            logger.error(f"Bayesian optimization failed: {e}")
+            return {'best_parameters': {}, 'best_fitness': -np.inf}
+
 
 class MultiObjectiveOptimizer:
-    """Optimización multi-objetivo para trading"""
+    """Multi-objective optimization for trading strategies."""
     
     def __init__(self, backtest_engine):
         self.backtest_engine = backtest_engine
-        
-    def optimize(self, strategy, data: pd.DataFrame,
-                parameter_ranges: Dict[str, Tuple[float, float]],
-                objectives: List[str] = ['sharpe', 'max_drawdown'],
-                population_size: int = 100,
-                generations: int = 50) -> List[Dict[str, Any]]:
-        """Optimización multi-objetivo usando NSGA-II"""
-        
-        # Configurar DEAP para multi-objetivo
-        creator.create("FitnessMulti", base.Fitness, weights=(1.0, -1.0))  # Maximizar Sharpe, minimizar Drawdown
-        creator.create("Individual", list, fitness=creator.FitnessMulti)
-        
-        toolbox = base.Toolbox()
-        
-        # Registrar funciones
-        param_count = len(parameter_ranges)
-        toolbox.register("attr_float", random.uniform, 0, 1)
-        toolbox.register("individual", tools.initRepeat, 
-                        creator.Individual, toolbox.attr_float, param_count)
-        toolbox.register("population", tools.initRepeat, list, toolbox.individual)
-        
-        toolbox.register("evaluate", self._evaluate_multi_objective,
-                        strategy=strategy, data=data, 
-                        parameter_ranges=parameter_ranges,
-                        objectives=objectives)
-        
-        toolbox.register("mate", tools.cxSimulatedBinaryBounded, 
-                        low=[0]*param_count, up=[1]*param_count, eta=20.0)
-        toolbox.register("mutate", tools.mutPolynomialBounded,
-                        low=[0]*param_count, up=[1]*param_count, eta=20.0, indpb=1.0/param_count)
-        toolbox.register("select", tools.selNSGA2)
-        
-        # Crear población
-        population = toolbox.population(n=population_size)
-        
-        # Ejecutar algoritmo
-        algorithms.eaMuPlusLambda(
-            population, toolbox,
-            mu=population_size,
-            lambda_=population_size,
-            cxpb=0.7,
-            mutpb=0.3,
-            ngen=generations,
-            verbose=True
-        )
-        
-        # Obtener frente de Pareto
-        pareto_front = tools.sortNondominated(population, len(population))[0]
-        
-        # Convertir a formato legible
-        results = []
-        for ind in pareto_front:
-            params = self._decode_individual(ind, parameter_ranges)
-            results.append({
-                'parameters': params,
-                'fitness': ind.fitness.values,
-                'objectives': objectives
-            })
-        
-        return results
     
-    def _evaluate_multi_objective(self, individual, strategy, data, 
-                                parameter_ranges, objectives):
-        """Evaluar para múltiples objetivos"""
+    def optimize(
+        self, 
+        strategy, 
+        data: pd.DataFrame,
+        parameter_ranges: Dict[str, Tuple[float, float]],
+        objectives: List[str] = None,
+        population_size: int = 100,
+        generations: int = 50
+    ) -> List[Dict[str, Any]]:
+        """Multi-objective optimization using NSGA-II."""
+        if objectives is None:
+            objectives = ['sharpe', 'max_drawdown']
+        
+        if not DEAP_AVAILABLE:
+            logger.warning("DEAP not available for multi-objective optimization")
+            return []
+        
+        try:
+            # Setup DEAP for multi-objective
+            if hasattr(creator, 'FitnessMulti'):
+                del creator.FitnessMulti
+            if hasattr(creator, 'IndividualMulti'):
+                del creator.IndividualMulti
+            
+            # Weights: maximize Sharpe, minimize drawdown
+            weights = tuple(1.0 if obj != 'max_drawdown' else -1.0 for obj in objectives)
+            creator.create("FitnessMulti", base.Fitness, weights=weights)
+            creator.create("IndividualMulti", list, fitness=creator.FitnessMulti)
+            
+            toolbox = base.Toolbox()
+            
+            param_count = len(parameter_ranges)
+            toolbox.register("attr_float", random.uniform, 0, 1)
+            toolbox.register("individual", tools.initRepeat, 
+                            creator.IndividualMulti, toolbox.attr_float, param_count)
+            toolbox.register("population", tools.initRepeat, list, toolbox.individual)
+            
+            def evaluate_multi(individual):
+                return self._evaluate_multi_objective(
+                    individual, strategy, data, parameter_ranges, objectives
+                )
+            
+            toolbox.register("evaluate", evaluate_multi)
+            toolbox.register("mate", tools.cxSimulatedBinaryBounded, 
+                            low=[0]*param_count, up=[1]*param_count, eta=20.0)
+            toolbox.register("mutate", tools.mutPolynomialBounded,
+                            low=[0]*param_count, up=[1]*param_count, eta=20.0, indpb=1.0/param_count)
+            toolbox.register("select", tools.selNSGA2)
+            
+            # Create population
+            population = toolbox.population(n=population_size)
+            
+            # Evaluate initial population
+            fitnesses = list(map(toolbox.evaluate, population))
+            for ind, fit in zip(population, fitnesses):
+                ind.fitness.values = fit
+            
+            # Run NSGA-II
+            for gen in range(generations):
+                offspring = algorithms.varAnd(population, toolbox, cxpb=0.7, mutpb=0.3)
+                
+                fits = list(map(toolbox.evaluate, offspring))
+                for ind, fit in zip(offspring, fits):
+                    ind.fitness.values = fit
+                
+                population = toolbox.select(population + offspring, k=population_size)
+                
+                if (gen + 1) % 10 == 0:
+                    logger.info(f"Generation {gen + 1}/{generations}")
+            
+            # Get Pareto front
+            pareto_front = tools.sortNondominated(population, len(population))[0]
+            
+            results = []
+            for ind in pareto_front:
+                params = self._decode_individual(ind, parameter_ranges)
+                results.append({
+                    'parameters': params,
+                    'fitness': ind.fitness.values,
+                    'objectives': objectives
+                })
+            
+            return results
+            
+        except Exception as e:
+            logger.error(f"Multi-objective optimization failed: {e}")
+            return []
+    
+    def _evaluate_multi_objective(
+        self, 
+        individual, 
+        strategy, 
+        data,
+        parameter_ranges, 
+        objectives
+    ) -> Tuple:
+        """Evaluate for multiple objectives."""
         try:
             params = self._decode_individual(individual, parameter_ranges)
             strategy.config.parameters.update(params)
@@ -327,24 +447,32 @@ class MultiObjectiveOptimizer:
                 if objective == 'sharpe':
                     fitness_values.append(result.sharpe_ratio or -10)
                 elif objective == 'max_drawdown':
-                    fitness_values.append(-result.max_drawdown)  # Negativo porque queremos minimizar
+                    fitness_values.append(-result.max_drawdown)
                 elif objective == 'total_return':
                     fitness_values.append(result.total_return)
                 elif objective == 'profit_factor':
-                    fitness_values.append(result.profit_factor or -10)
+                    pf = result.profit_factor
+                    fitness_values.append(pf if pf and pf != float('inf') else -10)
             
             return tuple(fitness_values)
             
         except Exception as e:
-            logger.warning(f"Error en evaluación multi-objetivo: {e}")
+            logger.warning(f"Error in multi-objective evaluation: {e}")
             return tuple([-10] * len(objectives))
     
-    def _decode_individual(self, individual, parameter_ranges):
-        """Decodificar individuo (mismo método que GeneticOptimizer)"""
+    def _decode_individual(
+        self, 
+        individual, 
+        parameter_ranges: Dict[str, Tuple[float, float]]
+    ) -> Dict[str, Any]:
+        """Decode individual to parameters."""
         params = {}
         param_names = list(parameter_ranges.keys())
         
         for i, param_name in enumerate(param_names):
+            if i >= len(individual):
+                break
+            
             min_val, max_val = parameter_ranges[param_name]
             
             if param_name.endswith('_int'):

@@ -1,5 +1,6 @@
 # data/__init__.py
-"""Data Module"""
-from .mt5_connector import MT5ConnectionManager
+"""Data module for the trading platform."""
 
-__all__ = ['MT5ConnectionManager']
+from .mt5_connector import MT5ConnectionManager, SymbolInfo
+
+__all__ = ['MT5ConnectionManager', 'SymbolInfo']

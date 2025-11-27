@@ -1,5 +1,12 @@
 # ml/__init__.py
-"""Machine Learning Module"""
-from .ml_engine import MLEngine, MLModelConfig
+"""Machine Learning module for the trading platform."""
 
-__all__ = ['MLEngine', 'MLModelConfig']
+from .ml_engine import MLEngine, MLModelConfig, MLResult, FeatureEngineer, MarketRegimeDetector
+
+__all__ = [
+    'MLEngine',
+    'MLModelConfig',
+    'MLResult',
+    'FeatureEngineer',
+    'MarketRegimeDetector'
+]

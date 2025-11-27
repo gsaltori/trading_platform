@@ -1,45 +1,78 @@
-# requirements_updated.txt - Versiones actuales disponibles
-PyQt6==6.6.1
-PyQt6-WebEngine==6.6.0
-qt-material==2.14
+# Trading Platform Requirements
+# ================================
 
-# Data Science
-pandas==2.1.4
-numpy==1.26.0
-scikit-learn==1.3.2
-tensorflow-cpu==2.16.2  # Última versión estable
-xgboost==2.0.2
-lightgbm==4.1.0
+# Core dependencies (required)
+pandas>=2.0.0
+numpy>=1.24.0
+pyyaml>=6.0.0
+joblib>=1.3.0
 
-# Optimization
-bayesian-optimization==1.4.3
-deap==1.4.1
+# Machine Learning (required for ML features)
+scikit-learn>=1.3.0
 
-# Trading & Data
-MetaTrader5==5.0.5370  # Última versión disponible
-yfinance==0.2.18
-ccxt==4.1.77
+# Machine Learning (optional - enhanced performance)
+# xgboost>=2.0.0
+# lightgbm>=4.0.0
 
-# Visualization
-plotly==5.17.0
-matplotlib==3.8.2
-seaborn==0.13.0
+# Deep Learning (optional - for LSTM strategies)
+# tensorflow>=2.15.0
 
-# Database & Cache
-sqlalchemy==2.0.23
-influxdb-client==1.39.0
-redis==5.0.1
-psycopg2-binary==2.9.9
+# Technical Analysis (recommended)
+ta>=0.10.0
 
-# Utilities
-psutil==5.9.6
-docker==6.1.3
-pyyaml==6.0.1
-joblib==1.3.2
-tqdm==4.66.1
+# GUI (required for graphical interface)
+PyQt6>=6.6.0
 
-# Development
-pytest==7.4.3
-black==23.9.1
-flake8==6.1.0
-mypy==1.6.1
+# Visualization (required for charts)
+matplotlib>=3.8.0
+
+# Trading (required - Windows only)
+# Install separately: pip install MetaTrader5
+# MetaTrader5>=5.0.0
+
+# Database (optional - for production)
+# sqlalchemy>=2.0.0
+# psycopg2-binary>=2.9.0
+# redis>=5.0.0
+# influxdb-client>=1.39.0
+
+# Data Sources (optional)
+# yfinance>=0.2.0
+# ccxt>=4.0.0
+
+# Optimization (optional)
+# deap>=1.4.0
+# bayesian-optimization>=1.4.0
+
+# Additional Visualization (optional)
+# plotly>=5.17.0
+# seaborn>=0.13.0
+
+# Performance (optional)
+# numba>=0.58.0
+# psutil>=5.9.0
+
+# Utilities (optional)
+# tqdm>=4.66.0
+
+# Development (optional)
+# pytest>=7.4.0
+# black>=23.9.0
+# flake8>=6.1.0
+
+
+# =================================
+# INSTALLATION GUIDE
+# =================================
+# 
+# Basic installation (GUI + Core features):
+#   pip install pandas numpy pyyaml joblib scikit-learn ta PyQt6 matplotlib
+#
+# Full installation with ML:
+#   pip install pandas numpy pyyaml joblib scikit-learn ta PyQt6 matplotlib xgboost lightgbm
+#
+# MetaTrader 5 (Windows only):
+#   pip install MetaTrader5
+#
+# Deep Learning (optional):
+#   pip install tensorflow

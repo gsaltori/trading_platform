@@ -1,5 +1,6 @@
 # database/__init__.py
-"""Database Module"""
-from .data_manager import DataManager
+"""Database management module for the trading platform."""
 
-__all__ = ['DataManager']
+from .data_manager import DataManager, TradingData
+
+__all__ = ['DataManager', 'TradingData']

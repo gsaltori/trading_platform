@@ -1,5 +1,11 @@
 # backtesting/__init__.py
-"""Backtesting Module"""
-from .backtest_engine import BacktestEngine, BacktestResult
+"""Backtesting module for the trading platform."""
 
-__all__ = ['BacktestEngine', 'BacktestResult']
+from .backtest_engine import BacktestEngine, BacktestResult, Trade, MultiStrategyBacktester
+
+__all__ = [
+    'BacktestEngine',
+    'BacktestResult',
+    'Trade',
+    'MultiStrategyBacktester'
+]

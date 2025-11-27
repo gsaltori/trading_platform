@@ -1,525 +1,842 @@
 # ui/main_window.py
+"""
+Main Window for the Trading Platform GUI.
+
+Integrates all widgets into a comprehensive trading interface.
+"""
+
 import sys
 import logging
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QTabWidget, QWidget, 
-                             QVBoxLayout, QHBoxLayout, QPushButton, QLabel, 
-                             QComboBox, QLineEdit, QTableWidget, QTableWidgetItem,
-                             QTextEdit, QProgressBar, QSplitter, QGroupBox,
-                             QGridLayout, QMessageBox, QToolBar, QStatusBar,
-                             QFileDialog, QCheckBox, QSpinBox, QDoubleSpinBox)
-from PyQt5.QtCore import Qt, QTimer, QThread, pyqtSignal
-from PyQt5.QtWidgets import QAction
-from PyQt5.QtGui import QIcon, QFont
-from PyQtChart.QtChart import QChart, QChartView, QLineSeries, QDateTimeAxis, QValueAxis
-from datetime import datetime, timedelta
-import pandas as pd
-import numpy as np
-
-from core.platform import get_platform
+from typing import Optional, Dict
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
-class DataWorker(QThread):
-    """Hilo para cargar datos sin bloquear la interfaz"""
-    data_loaded = pyqtSignal(pd.DataFrame)
-    error_occurred = pyqtSignal(str)
-    
-    def __init__(self, symbol, timeframe, days):
-        super().__init__()
-        self.symbol = symbol
-        self.timeframe = timeframe
-        self.days = days
-    
-    def run(self):
-        try:
-            platform = get_platform()
-            data = platform.get_market_data(self.symbol, self.timeframe, self.days)
-            if data is not None:
-                self.data_loaded.emit(data)
-            else:
-                self.error_occurred.emit("No se pudieron cargar los datos")
-        except Exception as e:
-            self.error_occurred.emit(str(e))
+# Check if PyQt6 is available
+PYQT_AVAILABLE = False
+try:
+    from PyQt6.QtWidgets import (
+        QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+        QTabWidget, QDockWidget, QToolBar, QStatusBar, QMenuBar,
+        QMenu, QMessageBox, QSplitter, QLabel, QProgressBar,
+        QFileDialog, QInputDialog
+    )
+    from PyQt6.QtCore import Qt, QTimer, QSettings, QSize
+    from PyQt6.QtGui import QAction, QIcon, QFont, QKeySequence
+    PYQT_AVAILABLE = True
+except ImportError:
+    logger.warning("PyQt6 not available, GUI disabled")
 
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.platform = get_platform()
-        self.init_ui()
-        
-    def init_ui(self):
-        self.setWindowTitle("Plataforma de Trading Algorítmico")
-        self.setGeometry(100, 100, 1400, 900)
-        
-        # Crear barra de herramientas
-        self.create_toolbar()
-        
-        # Crear barra de estado
-        self.status_bar = QStatusBar()
-        self.setStatusBar(self.status_bar)
-        self.status_bar.showMessage("Listo")
-        
-        # Crear widget central con pestañas
-        self.tabs = QTabWidget()
-        self.setCentralWidget(self.tabs)
-        
-        # Crear las diferentes pestañas
-        self.create_dashboard_tab()
-        self.create_data_tab()
-        self.create_strategy_editor_tab()
-        self.create_backtesting_tab()
-        self.create_live_trading_tab()
-        
-        # Timer para actualizaciones en tiempo real
-        self.timer = QTimer()
-        self.timer.timeout.connect(self.update_realtime_data)
-        self.timer.start(5000)  # Actualizar cada 5 segundos
-        
-    def create_toolbar(self):
-        toolbar = QToolBar("Barra principal")
-        self.addToolBar(toolbar)
-        
-        # Acciones
-        connect_action = QAction("Conectar MT5", self)
-        connect_action.triggered.connect(self.connect_mt5)
-        toolbar.addAction(connect_action)
-        
-        toolbar.addSeparator()
-        
-        refresh_action = QAction("Actualizar datos", self)
-        refresh_action.triggered.connect(self.refresh_data)
-        toolbar.addAction(refresh_action)
-        
-    def create_dashboard_tab(self):
-        """Pestaña del Dashboard principal"""
-        dashboard_tab = QWidget()
-        layout = QVBoxLayout()
-        
-        # Título
-        title = QLabel("Dashboard Principal")
-        title.setFont(QFont("Arial", 16, QFont.Bold))
-        layout.addWidget(title)
-        
-        # Métricas en tiempo real
-        metrics_group = QGroupBox("Métricas de Cuenta")
-        metrics_layout = QGridLayout()
-        
-        self.balance_label = QLabel("Balance: --")
-        self.equity_label = QLabel("Equity: --")
-        self.margin_label = QLabel("Margen: --")
-        self.free_margin_label = QLabel("Margen Libre: --")
-        
-        metrics_layout.addWidget(QLabel("Balance:"), 0, 0)
-        metrics_layout.addWidget(self.balance_label, 0, 1)
-        metrics_layout.addWidget(QLabel("Equity:"), 1, 0)
-        metrics_layout.addWidget(self.equity_label, 1, 1)
-        metrics_layout.addWidget(QLabel("Margen:"), 2, 0)
-        metrics_layout.addWidget(self.margin_label, 2, 1)
-        metrics_layout.addWidget(QLabel("Margen Libre:"), 3, 0)
-        metrics_layout.addWidget(self.free_margin_label, 3, 1)
-        
-        metrics_group.setLayout(metrics_layout)
-        layout.addWidget(metrics_group)
-        
-        # Gráfico de equity
-        self.equity_chart = QChart()
-        self.equity_series = QLineSeries()
-        self.equity_chart.addSeries(self.equity_series)
-        
-        axis_x = QDateTimeAxis()
-        axis_x.setFormat("dd/MM hh:mm")
-        self.equity_chart.addAxis(axis_x, Qt.AlignBottom)
-        self.equity_series.attachAxis(axis_x)
-        
-        axis_y = QValueAxis()
-        self.equity_chart.addAxis(axis_y, Qt.AlignLeft)
-        self.equity_series.attachAxis(axis_y)
-        
-        self.equity_chart_view = QChartView(self.equity_chart)
-        layout.addWidget(self.equity_chart_view)
-        
-        dashboard_tab.setLayout(layout)
-        self.tabs.addTab(dashboard_tab, "Dashboard")
-        
-    def create_data_tab(self):
-        """Pestaña de gestión de datos"""
-        data_tab = QWidget()
-        layout = QVBoxLayout()
-        
-        # Controles de datos
-        controls_layout = QHBoxLayout()
-        
-        self.symbol_combo = QComboBox()
-        self.symbol_combo.addItems(["EURUSD", "GBPUSD", "USDJPY", "USDCAD", "AUDUSD", "XAUUSD"])
-        controls_layout.addWidget(QLabel("Símbolo:"))
-        controls_layout.addWidget(self.symbol_combo)
-        
-        self.timeframe_combo = QComboBox()
-        self.timeframe_combo.addItems(["M1", "M5", "M15", "M30", "H1", "H4", "D1"])
-        controls_layout.addWidget(QLabel("Timeframe:"))
-        controls_layout.addWidget(self.timeframe_combo)
-        
-        self.days_spin = QSpinBox()
-        self.days_spin.setRange(1, 365)
-        self.days_spin.setValue(30)
-        controls_layout.addWidget(QLabel("Días:"))
-        controls_layout.addWidget(self.days_spin)
-        
-        load_btn = QPushButton("Cargar Datos")
-        load_btn.clicked.connect(self.load_data)
-        controls_layout.addWidget(load_btn)
-        
-        controls_layout.addStretch()
-        layout.addLayout(controls_layout)
-        
-        # Tabla de datos
-        self.data_table = QTableWidget()
-        layout.addWidget(self.data_table)
-        
-        data_tab.setLayout(layout)
-        self.tabs.addTab(data_tab, "Datos de Mercado")
-        
-    def create_strategy_editor_tab(self):
-        """Pestaña del editor de estrategias"""
-        editor_tab = QWidget()
-        layout = QVBoxLayout()
-        
-        # Aquí irá el editor visual de estrategias (para la Fase 2, un editor simple)
-        self.strategy_code_editor = QTextEdit()
-        self.strategy_code_editor.setPlaceholderText("Escribe tu estrategia en Python aquí...")
-        layout.addWidget(self.strategy_code_editor)
-        
-        # Botones para guardar y cargar estrategias
-        btn_layout = QHBoxLayout()
-        save_btn = QPushButton("Guardar Estrategia")
-        save_btn.clicked.connect(self.save_strategy)
-        btn_layout.addWidget(save_btn)
-        
-        load_btn = QPushButton("Cargar Estrategia")
-        load_btn.clicked.connect(self.load_strategy)
-        btn_layout.addWidget(load_btn)
-        
-        test_btn = QPushButton("Probar Estrategia")
-        test_btn.clicked.connect(self.test_strategy)
-        btn_layout.addWidget(test_btn)
-        
-        btn_layout.addStretch()
-        layout.addLayout(btn_layout)
-        
-        editor_tab.setLayout(layout)
-        self.tabs.addTab(editor_tab, "Editor de Estrategias")
-        
-    def create_backtesting_tab(self):
-        """Pestaña de backtesting"""
-        backtesting_tab = QWidget()
-        layout = QVBoxLayout()
-        
-        # Controles de backtesting
-        controls_layout = QGridLayout()
-        
-        self.bt_symbol_combo = QComboBox()
-        self.bt_symbol_combo.addItems(["EURUSD", "GBPUSD", "USDJPY", "USDCAD", "AUDUSD", "XAUUSD"])
-        controls_layout.addWidget(QLabel("Símbolo:"), 0, 0)
-        controls_layout.addWidget(self.bt_symbol_combo, 0, 1)
-        
-        self.bt_timeframe_combo = QComboBox()
-        self.bt_timeframe_combo.addItems(["M1", "M5", "M15", "M30", "H1", "H4", "D1"])
-        controls_layout.addWidget(QLabel("Timeframe:"), 0, 2)
-        controls_layout.addWidget(self.bt_timeframe_combo, 0, 3)
-        
-        self.bt_start_date = QLineEdit()
-        self.bt_start_date.setPlaceholderText("YYYY-MM-DD")
-        controls_layout.addWidget(QLabel("Fecha Inicio:"), 1, 0)
-        controls_layout.addWidget(self.bt_start_date, 1, 1)
-        
-        self.bt_end_date = QLineEdit()
-        self.bt_end_date.setPlaceholderText("YYYY-MM-DD")
-        controls_layout.addWidget(QLabel("Fecha Fin:"), 1, 2)
-        controls_layout.addWidget(self.bt_end_date, 1, 3)
-        
-        self.bt_initial_capital = QDoubleSpinBox()
-        self.bt_initial_capital.setRange(100, 1000000)
-        self.bt_initial_capital.setValue(10000)
-        controls_layout.addWidget(QLabel("Capital Inicial:"), 2, 0)
-        controls_layout.addWidget(self.bt_initial_capital, 2, 1)
-        
-        run_bt_btn = QPushButton("Ejecutar Backtest")
-        run_bt_btn.clicked.connect(self.run_backtest)
-        controls_layout.addWidget(run_bt_btn, 2, 2, 1, 2)
-        
-        layout.addLayout(controls_layout)
-        
-        # Resultados del backtest
-        self.bt_results_text = QTextEdit()
-        self.bt_results_text.setReadOnly(True)
-        layout.addWidget(self.bt_results_text)
-        
-        backtesting_tab.setLayout(layout)
-        self.tabs.addTab(backtesting_tab, "Backtesting")
-        
-    def create_live_trading_tab(self):
-        """Pestaña de trading en vivo"""
-        live_tab = QWidget()
-        layout = QVBoxLayout()
-        
-        # Controles de trading en vivo
-        controls_layout = QHBoxLayout()
-        
-        self.live_strategy_combo = QComboBox()
-        # Aquí cargaremos las estrategias disponibles
-        controls_layout.addWidget(QLabel("Estrategia:"))
-        controls_layout.addWidget(self.live_strategy_combo)
-        
-        self.start_live_btn = QPushButton("Iniciar Trading")
-        self.start_live_btn.clicked.connect(self.toggle_live_trading)
-        controls_layout.addWidget(self.start_live_btn)
-        
-        self.live_status_label = QLabel("Detenido")
-        self.live_status_label.setStyleSheet("color: red; font-weight: bold;")
-        controls_layout.addWidget(self.live_status_label)
-        
-        controls_layout.addStretch()
-        layout.addLayout(controls_layout)
-        
-        # Log de operaciones en vivo
-        self.live_log = QTextEdit()
-        self.live_log.setReadOnly(True)
-        layout.addWidget(self.live_log)
-        
-        live_tab.setLayout(layout)
-        self.tabs.addTab(live_tab, "Trading en Vivo")
-        
-    def connect_mt5(self):
-        """Conectar/Desconectar MT5"""
-        try:
-            if not self.platform.initialized:
-                if self.platform.initialize():
-                    self.status_bar.showMessage("MT5 Conectado")
-                    QMessageBox.information(self, "Conexión", "Conectado a MT5 correctamente")
-                else:
-                    QMessageBox.critical(self, "Error", "No se pudo conectar a MT5")
-            else:
-                self.platform.shutdown()
-                self.status_bar.showMessage("MT5 Desconectado")
-                QMessageBox.information(self, "Conexión", "Desconectado de MT5")
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Error de conexión: {str(e)}")
-    
-    def load_data(self):
-        """Cargar datos en segundo plano"""
-        symbol = self.symbol_combo.currentText()
-        timeframe = self.timeframe_combo.currentText()
-        days = self.days_spin.value()
-        
-        self.status_bar.showMessage(f"Cargando datos para {symbol} {timeframe}...")
-        
-        # Usar un hilo para cargar datos sin bloquear la UI
-        self.data_worker = DataWorker(symbol, timeframe, days)
-        self.data_worker.data_loaded.connect(self.on_data_loaded)
-        self.data_worker.error_occurred.connect(self.on_data_error)
-        self.data_worker.start()
-    
-    def on_data_loaded(self, data):
-        """Cuando los datos se cargan correctamente"""
-        self.status_bar.showMessage("Datos cargados correctamente")
-        
-        # Actualizar la tabla
-        self.update_data_table(data)
-    
-    def on_data_error(self, error_msg):
-        """Cuando ocurre un error cargando datos"""
-        self.status_bar.showMessage("Error cargando datos")
-        QMessageBox.critical(self, "Error", error_msg)
-    
-    def update_data_table(self, data):
-        """Actualizar la tabla con los datos cargados"""
-        self.data_table.setRowCount(len(data))
-        self.data_table.setColumnCount(6)
-        self.data_table.setHorizontalHeaderLabels(["Fecha", "Open", "High", "Low", "Close", "Volume"])
-        
-        for row, (idx, values) in enumerate(data.iterrows()):
-            self.data_table.setItem(row, 0, QTableWidgetItem(idx.strftime("%Y-%m-%d %H:%M")))
-            self.data_table.setItem(row, 1, QTableWidgetItem(str(values['open'])))
-            self.data_table.setItem(row, 2, QTableWidgetItem(str(values['high'])))
-            self.data_table.setItem(row, 3, QTableWidgetItem(str(values['low'])))
-            self.data_table.setItem(row, 4, QTableWidgetItem(str(values['close'])))
-            self.data_table.setItem(row, 5, QTableWidgetItem(str(values.get('volume', 0))))
-        
-        self.data_table.resizeColumnsToContents()
-    
-    def save_strategy(self):
-        """Guardar estrategia en un archivo"""
-        file_path, _ = QFileDialog.getSaveFileName(self, "Guardar Estrategia", "", "Python Files (*.py)")
-        if file_path:
-            try:
-                with open(file_path, 'w') as f:
-                    f.write(self.strategy_code_editor.toPlainText())
-                self.status_bar.showMessage("Estrategia guardada correctamente")
-            except Exception as e:
-                QMessageBox.critical(self, "Error", f"No se pudo guardar la estrategia: {str(e)}")
-    
-    def load_strategy(self):
-        """Cargar estrategia desde un archivo"""
-        file_path, _ = QFileDialog.getOpenFileName(self, "Cargar Estrategia", "", "Python Files (*.py)")
-        if file_path:
-            try:
-                with open(file_path, 'r') as f:
-                    self.strategy_code_editor.setPlainText(f.read())
-                self.status_bar.showMessage("Estrategia cargada correctamente")
-            except Exception as e:
-                QMessageBox.critical(self, "Error", f"No se pudo cargar la estrategia: {str(e)}")
-    
-    def test_strategy(self):
-        """Probar la estrategia actual"""
-        # En la Fase 2, haremos una prueba básica de sintaxis
-        code = self.strategy_code_editor.toPlainText()
-        if not code.strip():
-            QMessageBox.warning(self, "Advertencia", "No hay código para probar")
-            return
-        
-        try:
-            # Intentar compilar el código para verificar sintaxis
-            compile(code, '<string>', 'exec')
-            self.status_bar.showMessage("Estrategia compilada correctamente")
-            QMessageBox.information(self, "Prueba", "La estrategia tiene sintaxis válida")
-        except SyntaxError as e:
-            QMessageBox.critical(self, "Error de Sintaxis", f"Error en la estrategia: {str(e)}")
-    
-    def run_backtest(self):
-        """Ejecutar backtest de la estrategia"""
-        # En la Fase 2, haremos un backtest básico
-        symbol = self.bt_symbol_combo.currentText()
-        timeframe = self.bt_timeframe_combo.currentText()
-        start_date = self.bt_start_date.text()
-        end_date = self.bt_end_date.text()
-        initial_capital = self.bt_initial_capital.value()
-        
-        if not start_date or not end_date:
-            QMessageBox.warning(self, "Advertencia", "Por favor, ingresa fechas de inicio y fin")
-            return
-        
-        try:
-            # Cargar datos
-            start = datetime.strptime(start_date, "%Y-%m-%d")
-            end = datetime.strptime(end_date, "%Y-%m-%d")
-            
-            platform = get_platform()
-            data = platform.get_market_data(symbol, timeframe, days=(end - start).days)
-            
-            if data is None:
-                QMessageBox.critical(self, "Error", "No se pudieron cargar los datos para el backtest")
-                return
-            
-            # Filtrar por fechas
-            data = data[(data.index >= start) & (data.index <= end)]
-            
-            # Ejecutar backtest básico (aquí integraríamos el motor de backtesting)
-            results = self.run_basic_backtest(data, initial_capital)
-            
-            # Mostrar resultados
-            self.display_backtest_results(results)
-            
-        except Exception as e:
-            QMessageBox.critical(self, "Error", f"Error en el backtest: {str(e)}")
-    
-    def run_basic_backtest(self, data, initial_capital):
-        """Backtest básico para demostración"""
-        # Esto es un ejemplo muy simple. En la Fase 3 lo expandiremos.
-        capital = initial_capital
-        position = 0
-        trades = []
-        
-        for i in range(1, len(data)):
-            # Estrategia simple: Cruce de medias móviles
-            if i > 20:
-                current_close = data['close'].iloc[i]
-                prev_close = data['close'].iloc[i-1]
-                ma_short = data['close'].iloc[i-10:i].mean()
-                ma_long = data['close'].iloc[i-20:i].mean()
-                
-                # Señal de compra
-                if prev_close < ma_long and current_close > ma_long and position <= 0:
-                    if position < 0:
-                        # Cerrar corto
-                        capital += position * (prev_close - current_close)
-                        trades.append(('Cierre Corto', data.index[i], current_close, capital))
-                        position = 0
-                    
-                    # Abrir largo
-                    position = capital * 0.1 / current_close  # 10% del capital
-                    trades.append(('Apertura Larga', data.index[i], current_close, capital))
-                
-                # Señal de venta
-                elif prev_close > ma_long and current_close < ma_long and position >= 0:
-                    if position > 0:
-                        # Cerrar largo
-                        capital += position * (current_close - prev_close)
-                        trades.append(('Cierre Largo', data.index[i], current_close, capital))
-                        position = 0
-                    
-                    # Abrir corto
-                    position = -capital * 0.1 / current_close  # 10% del capital
-                    trades.append(('Apertura Corta', data.index[i], current_close, capital))
-        
-        # Cerrar posición final
-        if position != 0:
-            capital += position * (data['close'].iloc[-1] - data['close'].iloc[-2])
-            trades.append(('Cierre Final', data.index[-1], data['close'].iloc[-1], capital))
-            position = 0
-        
-        return {
-            'initial_capital': initial_capital,
-            'final_capital': capital,
-            'total_return': (capital - initial_capital) / initial_capital * 100,
-            'total_trades': len(trades),
-            'trades': trades
-        }
-    
-    def display_backtest_results(self, results):
-        """Mostrar resultados del backtest"""
-        text = f"""
-        RESULTADOS DEL BACKTEST
-        ========================
-        Capital Inicial: ${results['initial_capital']:,.2f}
-        Capital Final: ${results['final_capital']:,.2f}
-        Retorno Total: {results['total_return']:.2f}%
-        Total Operaciones: {results['total_trades']}
-        
-        ÚLTIMAS 10 OPERACIONES:
-        """
-        
-        for trade in results['trades'][-10:]:
-            text += f"{trade[0]} - {trade[1].strftime('%Y-%m-%d')} - Precio: {trade[2]:.5f} - Capital: ${trade[3]:,.2f}\n"
-        
-        self.bt_results_text.setPlainText(text)
-    
-    def toggle_live_trading(self):
-        """Iniciar/Detener trading en vivo"""
-        # Por implementar en fases posteriores
-        QMessageBox.information(self, "En Desarrollo", "Esta funcionalidad estará disponible en la Fase 3")
-    
-    def update_realtime_data(self):
-        """Actualizar datos en tiempo real"""
-        if self.platform.initialized:
-            # Actualizar métricas de cuenta
-            account_info = self.platform.get_account_summary()
-            if account_info:
-                self.balance_label.setText(f"${account_info.get('balance', 0):,.2f}")
-                self.equity_label.setText(f"${account_info.get('equity', 0):,.2f}")
-                self.margin_label.setText(f"${account_info.get('margin', 0):,.2f}")
-                self.free_margin_label.setText(f"${account_info.get('free_margin', 0):,.2f}")
 
 def run_gui():
-    """Función para ejecutar la interfaz gráfica"""
-    app = QApplication(sys.argv)
+    """Run the GUI application."""
+    if not PYQT_AVAILABLE:
+        print("=" * 60)
+        print("GUI NOT AVAILABLE")
+        print("=" * 60)
+        print("PyQt6 is not installed. To use the GUI, install it with:")
+        print("  pip install PyQt6")
+        print("")
+        print("For charts, also install:")
+        print("  pip install matplotlib")
+        print("")
+        print("For now, you can use the platform in headless mode:")
+        print("  python main.py --headless")
+        print("=" * 60)
+        return 1
     
-    # Establecer estilo moderno
+    app = QApplication(sys.argv)
     app.setStyle('Fusion')
+    app.setApplicationName("Trading Platform")
+    app.setOrganizationName("TradingPlatform")
+    
+    # Set application-wide font
+    font = QFont("Segoe UI", 9)
+    app.setFont(font)
+    
+    # Apply dark theme
+    app.setStyleSheet(get_dark_theme())
     
     window = MainWindow()
     window.show()
     
-    sys.exit(app.exec())
+    return app.exec()
+
+
+def get_dark_theme() -> str:
+    """Get dark theme stylesheet."""
+    return """
+    QMainWindow {
+        background-color: #2b2b2b;
+    }
+    QWidget {
+        background-color: #2b2b2b;
+        color: #e0e0e0;
+    }
+    QGroupBox {
+        border: 1px solid #3c3c3c;
+        border-radius: 5px;
+        margin-top: 10px;
+        padding-top: 10px;
+        font-weight: bold;
+    }
+    QGroupBox::title {
+        subcontrol-origin: margin;
+        left: 10px;
+        padding: 0 5px;
+    }
+    QPushButton {
+        background-color: #3c3c3c;
+        border: 1px solid #5c5c5c;
+        border-radius: 4px;
+        padding: 6px 12px;
+        min-width: 60px;
+    }
+    QPushButton:hover {
+        background-color: #4c4c4c;
+        border-color: #6c6c6c;
+    }
+    QPushButton:pressed {
+        background-color: #2c2c2c;
+    }
+    QPushButton:disabled {
+        background-color: #2c2c2c;
+        color: #6c6c6c;
+    }
+    QLineEdit, QTextEdit, QSpinBox, QDoubleSpinBox, QComboBox {
+        background-color: #1e1e1e;
+        border: 1px solid #3c3c3c;
+        border-radius: 4px;
+        padding: 4px;
+        selection-background-color: #264f78;
+    }
+    QLineEdit:focus, QTextEdit:focus, QSpinBox:focus, QDoubleSpinBox:focus {
+        border-color: #0078d4;
+    }
+    QComboBox::drop-down {
+        border: none;
+        width: 20px;
+    }
+    QComboBox::down-arrow {
+        width: 12px;
+        height: 12px;
+    }
+    QTableWidget {
+        background-color: #1e1e1e;
+        alternate-background-color: #252525;
+        gridline-color: #3c3c3c;
+        border: 1px solid #3c3c3c;
+    }
+    QTableWidget::item:selected {
+        background-color: #264f78;
+    }
+    QHeaderView::section {
+        background-color: #2b2b2b;
+        border: 1px solid #3c3c3c;
+        padding: 4px;
+    }
+    QTabWidget::pane {
+        border: 1px solid #3c3c3c;
+        border-radius: 4px;
+    }
+    QTabBar::tab {
+        background-color: #2b2b2b;
+        border: 1px solid #3c3c3c;
+        border-bottom: none;
+        border-top-left-radius: 4px;
+        border-top-right-radius: 4px;
+        padding: 8px 16px;
+        margin-right: 2px;
+    }
+    QTabBar::tab:selected {
+        background-color: #3c3c3c;
+    }
+    QTabBar::tab:hover {
+        background-color: #353535;
+    }
+    QProgressBar {
+        border: 1px solid #3c3c3c;
+        border-radius: 4px;
+        text-align: center;
+    }
+    QProgressBar::chunk {
+        background-color: #0078d4;
+        border-radius: 3px;
+    }
+    QScrollBar:vertical {
+        background-color: #2b2b2b;
+        width: 12px;
+        margin: 0;
+    }
+    QScrollBar::handle:vertical {
+        background-color: #5c5c5c;
+        border-radius: 6px;
+        min-height: 20px;
+    }
+    QScrollBar::handle:vertical:hover {
+        background-color: #6c6c6c;
+    }
+    QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+        height: 0;
+    }
+    QDockWidget {
+        titlebar-close-icon: none;
+        titlebar-normal-icon: none;
+    }
+    QDockWidget::title {
+        background-color: #353535;
+        padding: 6px;
+    }
+    QMenuBar {
+        background-color: #2b2b2b;
+        border-bottom: 1px solid #3c3c3c;
+    }
+    QMenuBar::item:selected {
+        background-color: #3c3c3c;
+    }
+    QMenu {
+        background-color: #2b2b2b;
+        border: 1px solid #3c3c3c;
+    }
+    QMenu::item:selected {
+        background-color: #3c3c3c;
+    }
+    QToolBar {
+        background-color: #2b2b2b;
+        border: none;
+        spacing: 3px;
+        padding: 3px;
+    }
+    QStatusBar {
+        background-color: #007acc;
+        color: white;
+    }
+    QListWidget {
+        background-color: #1e1e1e;
+        border: 1px solid #3c3c3c;
+        border-radius: 4px;
+    }
+    QListWidget::item:selected {
+        background-color: #264f78;
+    }
+    QListWidget::item:hover {
+        background-color: #353535;
+    }
+    QTreeWidget {
+        background-color: #1e1e1e;
+        border: 1px solid #3c3c3c;
+        border-radius: 4px;
+    }
+    QTreeWidget::item:selected {
+        background-color: #264f78;
+    }
+    QSplitter::handle {
+        background-color: #3c3c3c;
+    }
+    QSplitter::handle:horizontal {
+        width: 2px;
+    }
+    QSplitter::handle:vertical {
+        height: 2px;
+    }
+    """
+
+
+if PYQT_AVAILABLE:
+    from .widgets.mt5_connection_widget import MT5ConnectionWidget
+    from .widgets.data_panel import DataPanel
+    from .widgets.strategy_generator_widget import StrategyGeneratorWidget
+    from .widgets.backtest_results_widget import BacktestResultsWidget
+    from .widgets.charts_widget import ChartsWidget
+    from .widgets.log_widget import LogWidget
+    from .widgets.auto_generator_widget import AutoGeneratorWidget
+    
+    class MainWindow(QMainWindow):
+        """Main window for the trading platform."""
+        
+        def __init__(self):
+            super().__init__()
+            
+            # Initialize components
+            self.mt5_connector = None
+            self.strategy_engine = None
+            self.ml_engine = None
+            self.backtest_engine = None
+            self.config = None
+            
+            # Initialize engines
+            self.init_engines()
+            
+            # Setup UI
+            self.init_ui()
+            self.create_menus()
+            self.create_toolbars()
+            self.create_status_bar()
+            self.setup_connections()
+            
+            # Load settings
+            self.load_settings()
+            
+            # Log startup
+            self.log_widget.info("Trading Platform started")
+        
+        def init_engines(self):
+            """Initialize trading engines."""
+            try:
+                # Config
+                from config.settings import ConfigManager
+                self.config = ConfigManager()
+                
+                # MT5 Connector
+                from data.mt5_connector import MT5ConnectionManager
+                self.mt5_connector = MT5ConnectionManager(self.config)
+                
+                # Strategy Engine
+                from strategies.strategy_engine import StrategyEngine
+                self.strategy_engine = StrategyEngine()
+                
+                # ML Engine
+                from ml.ml_engine import MLEngine
+                self.ml_engine = MLEngine()
+                
+                # Backtest Engine
+                from backtesting.backtest_engine import BacktestEngine
+                self.backtest_engine = BacktestEngine(
+                    initial_capital=10000.0
+                )
+                
+                logger.info("All engines initialized successfully")
+                
+            except Exception as e:
+                logger.error(f"Error initializing engines: {e}")
+        
+        def init_ui(self):
+            """Initialize the user interface."""
+            self.setWindowTitle("Trading Platform - Strategy Generator")
+            self.setMinimumSize(1400, 900)
+            
+            # Central widget with tabs
+            central_widget = QWidget()
+            self.setCentralWidget(central_widget)
+            
+            main_layout = QVBoxLayout(central_widget)
+            main_layout.setContentsMargins(5, 5, 5, 5)
+            
+            # Main splitter
+            main_splitter = QSplitter(Qt.Orientation.Horizontal)
+            
+            # Left panel - MT5 Connection
+            left_panel = QWidget()
+            left_layout = QVBoxLayout(left_panel)
+            left_layout.setContentsMargins(0, 0, 0, 0)
+            
+            self.mt5_widget = MT5ConnectionWidget(self.mt5_connector)
+            left_layout.addWidget(self.mt5_widget)
+            
+            left_panel.setMaximumWidth(400)
+            main_splitter.addWidget(left_panel)
+            
+            # Center panel - Main tabs
+            center_panel = QWidget()
+            center_layout = QVBoxLayout(center_panel)
+            center_layout.setContentsMargins(0, 0, 0, 0)
+            
+            self.main_tabs = QTabWidget()
+            
+            # Data Tab
+            self.data_panel = DataPanel(self.mt5_connector)
+            self.main_tabs.addTab(self.data_panel, "📥 Data")
+            
+            # Strategy Generator Tab
+            self.strategy_widget = StrategyGeneratorWidget(
+                self.strategy_engine, self.ml_engine
+            )
+            self.main_tabs.addTab(self.strategy_widget, "🔧 Strategy Generator")
+            
+            # Backtest Tab
+            self.backtest_widget = BacktestResultsWidget(self.backtest_engine)
+            self.main_tabs.addTab(self.backtest_widget, "📊 Backtest")
+            
+            # Charts Tab
+            self.charts_widget = ChartsWidget()
+            self.main_tabs.addTab(self.charts_widget, "📈 Charts")
+            
+            # Auto Generator Tab (NEW)
+            self.auto_generator_widget = AutoGeneratorWidget()
+            self.main_tabs.addTab(self.auto_generator_widget, "🧬 Auto Generator")
+            
+            center_layout.addWidget(self.main_tabs)
+            main_splitter.addWidget(center_panel)
+            
+            # Set splitter sizes
+            main_splitter.setSizes([350, 1050])
+            
+            main_layout.addWidget(main_splitter)
+            
+            # Bottom panel - Logs (as dock widget)
+            self.log_dock = QDockWidget("Logs", self)
+            self.log_widget = LogWidget()
+            self.log_dock.setWidget(self.log_widget)
+            self.log_dock.setAllowedAreas(
+                Qt.DockWidgetArea.BottomDockWidgetArea | 
+                Qt.DockWidgetArea.TopDockWidgetArea
+            )
+            self.addDockWidget(Qt.DockWidgetArea.BottomDockWidgetArea, self.log_dock)
+            
+            # Set initial dock size
+            self.log_dock.setMinimumHeight(150)
+            self.log_dock.setMaximumHeight(300)
+        
+        def create_menus(self):
+            """Create menu bar."""
+            menubar = self.menuBar()
+            
+            # File Menu
+            file_menu = menubar.addMenu("&File")
+            
+            new_action = QAction("&New Project", self)
+            new_action.setShortcut(QKeySequence.StandardKey.New)
+            new_action.triggered.connect(self.new_project)
+            file_menu.addAction(new_action)
+            
+            open_action = QAction("&Open Project", self)
+            open_action.setShortcut(QKeySequence.StandardKey.Open)
+            open_action.triggered.connect(self.open_project)
+            file_menu.addAction(open_action)
+            
+            save_action = QAction("&Save Project", self)
+            save_action.setShortcut(QKeySequence.StandardKey.Save)
+            save_action.triggered.connect(self.save_project)
+            file_menu.addAction(save_action)
+            
+            file_menu.addSeparator()
+            
+            import_data_action = QAction("Import &Data", self)
+            import_data_action.triggered.connect(self.import_data)
+            file_menu.addAction(import_data_action)
+            
+            export_data_action = QAction("&Export Data", self)
+            export_data_action.triggered.connect(self.export_data)
+            file_menu.addAction(export_data_action)
+            
+            file_menu.addSeparator()
+            
+            exit_action = QAction("E&xit", self)
+            exit_action.setShortcut(QKeySequence.StandardKey.Quit)
+            exit_action.triggered.connect(self.close)
+            file_menu.addAction(exit_action)
+            
+            # View Menu
+            view_menu = menubar.addMenu("&View")
+            
+            toggle_logs_action = QAction("Toggle &Logs", self)
+            toggle_logs_action.setShortcut("Ctrl+L")
+            toggle_logs_action.triggered.connect(self.toggle_logs)
+            view_menu.addAction(toggle_logs_action)
+            
+            view_menu.addSeparator()
+            
+            # Theme submenu
+            theme_menu = view_menu.addMenu("&Theme")
+            
+            dark_theme_action = QAction("&Dark", self)
+            dark_theme_action.triggered.connect(lambda: self.set_theme('dark'))
+            theme_menu.addAction(dark_theme_action)
+            
+            light_theme_action = QAction("&Light", self)
+            light_theme_action.triggered.connect(lambda: self.set_theme('light'))
+            theme_menu.addAction(light_theme_action)
+            
+            # Tools Menu
+            tools_menu = menubar.addMenu("&Tools")
+            
+            scan_mt5_action = QAction("&Scan MT5 Installations", self)
+            scan_mt5_action.triggered.connect(self.mt5_widget.scan_installations)
+            tools_menu.addAction(scan_mt5_action)
+            
+            tools_menu.addSeparator()
+            
+            settings_action = QAction("&Settings", self)
+            settings_action.triggered.connect(self.show_settings)
+            tools_menu.addAction(settings_action)
+            
+            # Help Menu
+            help_menu = menubar.addMenu("&Help")
+            
+            docs_action = QAction("&Documentation", self)
+            docs_action.triggered.connect(self.show_documentation)
+            help_menu.addAction(docs_action)
+            
+            help_menu.addSeparator()
+            
+            about_action = QAction("&About", self)
+            about_action.triggered.connect(self.show_about)
+            help_menu.addAction(about_action)
+        
+        def create_toolbars(self):
+            """Create tool bars."""
+            # Main toolbar
+            main_toolbar = QToolBar("Main")
+            main_toolbar.setMovable(False)
+            main_toolbar.setIconSize(QSize(24, 24))
+            self.addToolBar(main_toolbar)
+            
+            # Quick connect button
+            self.quick_connect_btn = QAction("🔌 Connect MT5", self)
+            self.quick_connect_btn.setToolTip("Quick connect to MT5")
+            self.quick_connect_btn.triggered.connect(self.quick_connect)
+            main_toolbar.addAction(self.quick_connect_btn)
+            
+            main_toolbar.addSeparator()
+            
+            # Download data button
+            download_btn = QAction("📥 Download Data", self)
+            download_btn.setToolTip("Download market data")
+            download_btn.triggered.connect(lambda: self.main_tabs.setCurrentWidget(self.data_panel))
+            main_toolbar.addAction(download_btn)
+            
+            # Generate strategy button
+            generate_btn = QAction("🔧 Generate Strategy", self)
+            generate_btn.setToolTip("Generate trading strategy")
+            generate_btn.triggered.connect(lambda: self.main_tabs.setCurrentWidget(self.strategy_widget))
+            main_toolbar.addAction(generate_btn)
+            
+            # Run backtest button
+            backtest_btn = QAction("📊 Backtest", self)
+            backtest_btn.setToolTip("Run backtest")
+            backtest_btn.triggered.connect(self.run_quick_backtest)
+            main_toolbar.addAction(backtest_btn)
+            
+            main_toolbar.addSeparator()
+            
+            # View charts button
+            charts_btn = QAction("📈 Charts", self)
+            charts_btn.setToolTip("View charts")
+            charts_btn.triggered.connect(lambda: self.main_tabs.setCurrentWidget(self.charts_widget))
+            main_toolbar.addAction(charts_btn)
+        
+        def create_status_bar(self):
+            """Create status bar."""
+            self.status_bar = QStatusBar()
+            self.setStatusBar(self.status_bar)
+            
+            # MT5 status
+            self.mt5_status_label = QLabel("MT5: Disconnected")
+            self.status_bar.addWidget(self.mt5_status_label)
+            
+            # Separator
+            self.status_bar.addWidget(QLabel(" | "))
+            
+            # Data status
+            self.data_status_label = QLabel("Data: No data loaded")
+            self.status_bar.addWidget(self.data_status_label)
+            
+            # Permanent widgets on right
+            self.status_bar.addPermanentWidget(QLabel("v1.0.0"))
+        
+        def setup_connections(self):
+            """Setup signal/slot connections."""
+            # MT5 connections
+            self.mt5_widget.connection_changed.connect(self.on_mt5_connection_changed)
+            self.mt5_widget.symbols_loaded.connect(self.on_symbols_loaded)
+            
+            # Data connections
+            self.data_panel.data_downloaded.connect(self.on_data_downloaded)
+            self.data_panel.data_selected.connect(self.on_data_selected)
+            
+            # Strategy connections
+            self.strategy_widget.strategy_generated.connect(self.on_strategy_generated)
+            
+            # Backtest connections
+            self.backtest_widget.backtest_requested.connect(self.on_backtest_requested)
+            
+            # Auto Generator connections
+            self.auto_generator_widget.strategy_generated.connect(self.on_auto_strategy_generated)
+            self.auto_generator_widget.strategies_optimized.connect(self.on_strategies_optimized)
+        
+        def on_mt5_connection_changed(self, connected: bool):
+            """Handle MT5 connection change."""
+            if connected:
+                self.mt5_status_label.setText("MT5: Connected ✓")
+                self.mt5_status_label.setStyleSheet("color: #4caf50;")
+                self.quick_connect_btn.setText("🔌 Disconnect MT5")
+                self.log_widget.info("Connected to MetaTrader 5")
+            else:
+                self.mt5_status_label.setText("MT5: Disconnected")
+                self.mt5_status_label.setStyleSheet("color: #f44336;")
+                self.quick_connect_btn.setText("🔌 Connect MT5")
+                self.log_widget.info("Disconnected from MetaTrader 5")
+        
+        def on_symbols_loaded(self, symbols: list):
+            """Handle symbols loaded from MT5."""
+            self.backtest_widget.set_symbols(symbols)
+            self.log_widget.info(f"Loaded {len(symbols)} symbols from MT5")
+        
+        def on_data_downloaded(self, symbol: str, data):
+            """Handle data download completion."""
+            self.data_status_label.setText(f"Data: {symbol} ({len(data)} candles)")
+            self.log_widget.info(f"Downloaded {len(data)} candles for {symbol}")
+            
+            # Update strategy generator with data
+            self.strategy_widget.set_data(data)
+            
+            # Update auto generator with data
+            self.auto_generator_widget.set_data(data)
+        
+        def on_data_selected(self, symbol: str, data):
+            """Handle data selection."""
+            # Plot on charts
+            self.charts_widget.plot_price_data(data)
+            
+            # Update strategy generator
+            self.strategy_widget.set_data(data)
+            
+            # Update auto generator
+            self.auto_generator_widget.set_data(data)
+        
+        def on_strategy_generated(self, name: str, strategy):
+            """Handle strategy generation."""
+            self.log_widget.info(f"Strategy '{name}' generated")
+            
+            # If we have data, offer to backtest
+            all_data = self.data_panel.get_all_data()
+            if all_data:
+                reply = QMessageBox.question(
+                    self, "Run Backtest?",
+                    f"Strategy '{name}' generated. Run backtest?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+                )
+                
+                if reply == QMessageBox.StandardButton.Yes:
+                    # Get first available data
+                    symbol = list(all_data.keys())[0]
+                    data = all_data[symbol]
+                    
+                    self.main_tabs.setCurrentWidget(self.backtest_widget)
+                    self.backtest_widget.run_backtest(strategy, data, symbol)
+        
+        def on_auto_strategy_generated(self, name: str, strategy):
+            """Handle auto-generated strategy."""
+            self.log_widget.info(f"Auto-generated strategy '{name}' ready")
+            
+            # Offer to backtest
+            all_data = self.data_panel.get_all_data()
+            if all_data:
+                reply = QMessageBox.question(
+                    self, "Run Backtest?",
+                    f"Strategy '{name}' generated. Run backtest?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+                )
+                
+                if reply == QMessageBox.StandardButton.Yes:
+                    symbol = list(all_data.keys())[0]
+                    data = all_data[symbol]
+                    self.main_tabs.setCurrentWidget(self.backtest_widget)
+                    # Note: Would need to adapt strategy for backtest
+        
+        def on_strategies_optimized(self, strategies: list):
+            """Handle optimized strategies from genetic algorithm."""
+            self.log_widget.info(f"Received {len(strategies)} optimized strategies")
+        
+        def on_backtest_requested(self, strategy, data):
+            """Handle backtest request."""
+            # Get selected strategy from strategy widget
+            current_strategy = None
+            for name, strat_data in self.strategy_widget.generated_strategies.items():
+                if 'strategy' in strat_data:
+                    current_strategy = strat_data['strategy']
+                    break
+            
+            if current_strategy is None:
+                QMessageBox.warning(
+                    self, "No Strategy",
+                    "Please generate a strategy first"
+                )
+                return
+            
+            # Get data
+            all_data = self.data_panel.get_all_data()
+            if not all_data:
+                QMessageBox.warning(
+                    self, "No Data",
+                    "Please download data first"
+                )
+                return
+            
+            symbol = list(all_data.keys())[0]
+            data = all_data[symbol]
+            
+            self.backtest_widget.run_backtest(current_strategy, data, symbol)
+        
+        def quick_connect(self):
+            """Quick connect/disconnect to MT5."""
+            if self.mt5_widget.is_mt5_connected():
+                self.mt5_widget.disconnect_mt5()
+            else:
+                self.mt5_widget.connect_mt5()
+        
+        def run_quick_backtest(self):
+            """Run a quick backtest with current strategy and data."""
+            self.main_tabs.setCurrentWidget(self.backtest_widget)
+            self.backtest_widget.request_backtest()
+        
+        def toggle_logs(self):
+            """Toggle log panel visibility."""
+            if self.log_dock.isVisible():
+                self.log_dock.hide()
+            else:
+                self.log_dock.show()
+        
+        def set_theme(self, theme: str):
+            """Set application theme."""
+            if theme == 'dark':
+                QApplication.instance().setStyleSheet(get_dark_theme())
+            else:
+                QApplication.instance().setStyleSheet("")
+        
+        def new_project(self):
+            """Create a new project."""
+            reply = QMessageBox.question(
+                self, "New Project",
+                "Create a new project? Unsaved changes will be lost.",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+            )
+            
+            if reply == QMessageBox.StandardButton.Yes:
+                self.data_panel.clear_all_data()
+                self.strategy_widget.generated_strategies.clear()
+                self.strategy_widget.update_strategies_tree()
+                self.charts_widget.clear_charts()
+                self.log_widget.info("New project created")
+        
+        def open_project(self):
+            """Open an existing project."""
+            filename, _ = QFileDialog.getOpenFileName(
+                self, "Open Project",
+                "",
+                "Trading Project (*.tproj);;All Files (*)"
+            )
+            
+            if filename:
+                self.log_widget.info(f"Opening project: {filename}")
+                # TODO: Implement project loading
+        
+        def save_project(self):
+            """Save current project."""
+            filename, _ = QFileDialog.getSaveFileName(
+                self, "Save Project",
+                "project.tproj",
+                "Trading Project (*.tproj);;All Files (*)"
+            )
+            
+            if filename:
+                self.log_widget.info(f"Saving project: {filename}")
+                # TODO: Implement project saving
+        
+        def import_data(self):
+            """Import data from file."""
+            filename, _ = QFileDialog.getOpenFileName(
+                self, "Import Data",
+                "",
+                "CSV Files (*.csv);;All Files (*)"
+            )
+            
+            if filename:
+                try:
+                    import pandas as pd
+                    data = pd.read_csv(filename, parse_dates=['time'], index_col='time')
+                    
+                    # Get symbol name from filename
+                    symbol = Path(filename).stem.upper()
+                    
+                    self.data_panel.downloaded_data[symbol] = data
+                    self.data_panel.update_data_list()
+                    
+                    self.log_widget.info(f"Imported {len(data)} rows from {filename}")
+                    
+                except Exception as e:
+                    QMessageBox.critical(self, "Import Error", f"Error importing data: {e}")
+        
+        def export_data(self):
+            """Export current data."""
+            self.data_panel.export_data()
+        
+        def show_settings(self):
+            """Show settings dialog."""
+            QMessageBox.information(
+                self, "Settings",
+                "Settings dialog coming soon!"
+            )
+        
+        def show_documentation(self):
+            """Show documentation."""
+            QMessageBox.information(
+                self, "Documentation",
+                "Documentation:\n\n"
+                "1. Connect to MT5 using the left panel\n"
+                "2. Download data for your desired symbols\n"
+                "3. Generate strategies using rule-based or ML methods\n"
+                "4. Backtest your strategies\n"
+                "5. Analyze results and optimize\n\n"
+                "For more information, visit the project repository."
+            )
+        
+        def show_about(self):
+            """Show about dialog."""
+            QMessageBox.about(
+                self,
+                "About Trading Platform",
+                "<h2>Trading Platform</h2>"
+                "<p>Version 1.0.0</p>"
+                "<p>A comprehensive algorithmic trading platform with:</p>"
+                "<ul>"
+                "<li>MetaTrader 5 integration</li>"
+                "<li>Automatic strategy generation</li>"
+                "<li>Machine Learning optimization</li>"
+                "<li>Advanced backtesting</li>"
+                "</ul>"
+                "<p>© 2024 Trading Platform</p>"
+            )
+        
+        def load_settings(self):
+            """Load application settings."""
+            settings = QSettings()
+            
+            # Window geometry
+            geometry = settings.value("geometry")
+            if geometry:
+                self.restoreGeometry(geometry)
+            
+            # Window state
+            state = settings.value("windowState")
+            if state:
+                self.restoreState(state)
+        
+        def save_settings(self):
+            """Save application settings."""
+            settings = QSettings()
+            settings.setValue("geometry", self.saveGeometry())
+            settings.setValue("windowState", self.saveState())
+        
+        def closeEvent(self, event):
+            """Handle window close event."""
+            # Disconnect MT5
+            if self.mt5_widget.is_mt5_connected():
+                self.mt5_widget.disconnect_mt5()
+            
+            # Save settings
+            self.save_settings()
+            
+            self.log_widget.info("Trading Platform closed")
+            event.accept()
+
+
+else:
+    class MainWindow:
+        """Dummy MainWindow when PyQt6 is not available."""
+        def __init__(self):
+            raise ImportError("PyQt6 is not installed")
+
 
 if __name__ == "__main__":
     run_gui()

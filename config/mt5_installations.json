@@ -1,0 +1,46 @@
+[
+  {
+    "name": "MetaTrader 5",
+    "path": "C:\\Program Files\\MetaTrader 5",
+    "terminal_exe": "C:\\Program Files\\MetaTrader 5\\terminal64.exe",
+    "data_path": "",
+    "broker": "",
+    "server": "",
+    "login": 0,
+    "is_portable": true,
+    "is_valid": true
+  },
+  {
+    "name": "FXPIG MetaTrader 5",
+    "path": "C:\\Program Files\\FXPIG MetaTrader 5",
+    "terminal_exe": "C:\\Program Files\\FXPIG MetaTrader 5\\terminal64.exe",
+    "data_path": "",
+    "broker": "",
+    "server": "",
+    "login": 0,
+    "is_portable": false,
+    "is_valid": true
+  },
+  {
+    "name": "MetaTrader",
+    "path": "C:\\Program Files\\MetaTrader",
+    "terminal_exe": "C:\\Program Files\\MetaTrader\\terminal64.exe",
+    "data_path": "",
+    "broker": "",
+    "server": "",
+    "login": 0,
+    "is_portable": true,
+    "is_valid": true
+  },
+  {
+    "name": "MetaTrader 5 IC Markets Global",
+    "path": "C:\\Program Files\\MetaTrader 5 IC Markets Global",
+    "terminal_exe": "C:\\Program Files\\MetaTrader 5 IC Markets Global\\terminal64.exe",
+    "data_path": "",
+    "broker": "",
+    "server": "",
+    "login": 0,
+    "is_portable": false,
+    "is_valid": true
+  }
+]

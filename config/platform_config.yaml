@@ -1,23 +1,39 @@
 database:
+  postgres_url: sqlite:///data/sqlite/trading.db
+  influx_url: ''
+  influx_token: ''
   influx_org: trading
-  influx_token: your-token
-  influx_url: http://localhost:8086
-  postgres_url: postgresql://trading_user:trading_password@localhost:5432/trading
-  redis_url: redis://localhost:6379/0
+  redis_url: ''
 mt5:
+  path: C:/Program Files/MetaTrader 5/terminal64.exe
+  server: ''
   login: 0
   password: ''
-  path: C:\Program Files\MetaTrader 5 IC Markets Global\terminal64.exe
-  portable: false
-  server: ''
   timeout: 60000
-optimization:
-  crossover_rate: 0.8
-  generations: 50
-  mutation_rate: 0.1
-  population_size: 100
+  portable: false
 risk:
-  correlation_threshold: 0.7
-  daily_loss_limit: 0.05
   max_drawdown: 0.15
   max_position_size: 0.1
+  daily_loss_limit: 0.05
+  correlation_threshold: 0.7
+  max_correlated_positions: 3
+  use_kelly_criterion: true
+  kelly_fraction: 0.5
+optimization:
+  population_size: 100
+  generations: 50
+  mutation_rate: 0.1
+  crossover_rate: 0.8
+  n_workers: -1
+trading:
+  max_slippage: 0.001
+  default_commission: 0.001
+  max_spread_multiplier: 2.0
+  allow_hedging: false
+  default_timeframe: H1
+logging:
+  level: INFO
+  file: logs/trading_platform.log
+  max_size_mb: 10
+  backup_count: 5
+  format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'

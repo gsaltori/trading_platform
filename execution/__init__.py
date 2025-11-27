@@ -1,5 +1,10 @@
 # execution/__init__.py
-"""Execution Module"""
-from .live_execution import LiveExecutionEngine, LiveTradingConfig
+"""Execution module for live trading."""
 
-__all__ = ['LiveExecutionEngine', 'LiveTradingConfig']
+from .live_execution import LiveExecutionEngine, LiveTradingConfig, LiveTrade
+
+__all__ = [
+    'LiveExecutionEngine',
+    'LiveTradingConfig',
+    'LiveTrade'
+]

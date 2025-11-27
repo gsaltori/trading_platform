@@ -1,5 +1,6 @@
 # risk_management/__init__.py
-"""Risk Management Module"""
-from .risk_engine import RiskEngine, RiskParameters
+"""Risk management module for the trading platform."""
 
-__all__ = ['RiskEngine', 'RiskParameters']
+from .risk_engine import RiskEngine, RiskConfig, PositionSizer
+
+__all__ = ['RiskEngine', 'RiskConfig', 'PositionSizer']

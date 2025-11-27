@@ -1,17 +1,27 @@
 # config/deployment.py
+"""
+Deployment management for the trading platform.
+
+Handles Docker deployment, environment configuration, and backups.
+"""
+
 import yaml
 import json
+import time
+import shutil
+import tarfile
 from pathlib import Path
 from typing import Dict, Any, Optional
 import logging
 from dataclasses import dataclass, asdict
-import docker
-from docker.errors import DockerException
+from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
+
 @dataclass
 class DeploymentConfig:
+    """Configuration for deployment."""
     environment: str  # 'development', 'staging', 'production'
     docker_enabled: bool = True
     database_backup_enabled: bool = True
@@ -28,8 +38,9 @@ class DeploymentConfig:
                 'max_workers': 8
             }
 
+
 class DeploymentManager:
-    """Gestor de deployment para entornos de producción"""
+    """Manages deployment for production environments."""
     
     def __init__(self, config: DeploymentConfig):
         self.config = config
@@ -37,12 +48,15 @@ class DeploymentManager:
         
         if config.docker_enabled:
             try:
+                import docker
                 self.docker_client = docker.from_env()
-            except DockerException as e:
-                logger.warning(f"Docker no disponible: {e}")
+            except ImportError:
+                logger.warning("Docker package not installed")
+            except Exception as e:
+                logger.warning(f"Docker not available: {e}")
     
     def create_docker_compose(self) -> str:
-        """Crear archivo docker-compose.yml para deployment"""
+        """Create docker-compose.yml for deployment."""
         compose_config = {
             'version': '3.8',
             'services': {
@@ -68,41 +82,47 @@ class DeploymentManager:
                         }
                     },
                     'restart': 'unless-stopped'
-                },
-                'database': {
-                    'image': 'postgres:13',
-                    'environment': {
-                        'POSTGRES_DB': 'trading',
-                        'POSTGRES_USER': 'trading_user',
-                        'POSTGRES_PASSWORD': 'trading_password'
-                    },
-                    'volumes': ['postgres_data:/var/lib/postgresql/data'],
-                    'ports': ['5432:5432'],
-                    'restart': 'unless-stopped'
-                },
-                'redis': {
-                    'image': 'redis:6-alpine',
-                    'ports': ['6379:6379'],
-                    'restart': 'unless-stopped'
-                },
-                'monitoring': {
-                    'image': 'grafana/grafana:latest',
-                    'ports': ['3000:3000'],
-                    'environment': {
-                        'GF_SECURITY_ADMIN_PASSWORD': 'admin'
-                    },
-                    'restart': 'unless-stopped'
                 }
-            },
-            'volumes': {
-                'postgres_data': {}
             }
         }
+        
+        # Add database services for non-lite deployments
+        if self.config.environment in ['staging', 'production']:
+            compose_config['services']['database'] = {
+                'image': 'postgres:13',
+                'environment': {
+                    'POSTGRES_DB': 'trading',
+                    'POSTGRES_USER': 'trading_user',
+                    'POSTGRES_PASSWORD': 'trading_password'
+                },
+                'volumes': ['postgres_data:/var/lib/postgresql/data'],
+                'ports': ['5432:5432'],
+                'restart': 'unless-stopped'
+            }
+            
+            compose_config['services']['redis'] = {
+                'image': 'redis:6-alpine',
+                'ports': ['6379:6379'],
+                'restart': 'unless-stopped'
+            }
+            
+            compose_config['volumes'] = {'postgres_data': {}}
+        
+        # Add monitoring for production
+        if self.config.environment == 'production' and self.config.monitoring_enabled:
+            compose_config['services']['monitoring'] = {
+                'image': 'grafana/grafana:latest',
+                'ports': ['3000:3000'],
+                'environment': {
+                    'GF_SECURITY_ADMIN_PASSWORD': 'admin'
+                },
+                'restart': 'unless-stopped'
+            }
         
         return yaml.dump(compose_config, default_flow_style=False)
     
     def create_environment_config(self) -> Dict[str, Any]:
-        """Crear configuración de entorno específica"""
+        """Create environment-specific configuration."""
         base_config = {
             'environment': self.config.environment,
             'logging': {
@@ -110,9 +130,11 @@ class DeploymentManager:
                 'file': f'logs/trading_platform_{self.config.environment}.log'
             },
             'database': {
-                'postgres_url': 'postgresql://trading_user:trading_password@database:5432/trading',
+                'postgres_url': 'postgresql://trading_user:trading_password@database:5432/trading' 
+                               if self.config.environment != 'development' 
+                               else 'sqlite:///data/sqlite/trading.db',
                 'influx_url': 'http://localhost:8086',
-                'redis_url': 'redis://redis:6379/0'
+                'redis_url': 'redis://redis:6379/0' if self.config.environment != 'development' else ''
             },
             'performance': {
                 'max_workers': self.config.resource_limits['max_workers'],
@@ -131,33 +153,34 @@ class DeploymentManager:
         return base_config
     
     def deploy_platform(self):
-        """Desplegar la plataforma completa"""
-        logger.info(f"Iniciando deployment en entorno: {self.config.environment}")
+        """Deploy the complete platform."""
+        logger.info(f"Starting deployment in environment: {self.config.environment}")
         
         try:
-            # 1. Crear directorios necesarios
+            # 1. Create necessary directories
             self._create_directories()
             
-            # 2. Generar archivos de configuración
+            # 2. Generate configuration files
             self._generate_config_files()
             
-            # 3. Iniciar con Docker si está disponible
+            # 3. Deploy with Docker if available
             if self.docker_client and self.config.docker_enabled:
                 self._deploy_with_docker()
             else:
                 self._deploy_manual()
             
-            logger.info("Deployment completado exitosamente")
+            logger.info("Deployment completed successfully")
             
         except Exception as e:
-            logger.error(f"Error en deployment: {e}")
+            logger.error(f"Deployment error: {e}")
             raise
     
     def _create_directories(self):
-        """Crear estructura de directorios necesaria"""
+        """Create necessary directory structure."""
         directories = [
             'config',
             'data/backups',
+            'data/sqlite',
             'logs',
             'cache',
             'reports',
@@ -168,22 +191,25 @@ class DeploymentManager:
             Path(directory).mkdir(parents=True, exist_ok=True)
     
     def _generate_config_files(self):
-        """Generar archivos de configuración"""
+        """Generate configuration files."""
         # Docker compose
         compose_content = self.create_docker_compose()
         with open('docker-compose.yml', 'w') as f:
             f.write(compose_content)
         
-        # Configuración de entorno
+        # Environment configuration
         env_config = self.create_environment_config()
         with open(f'config/config_{self.config.environment}.yaml', 'w') as f:
             yaml.dump(env_config, f, default_flow_style=False)
         
-        # Script de inicio
+        # Startup script
         self._create_startup_script()
+        
+        # Dockerfile
+        self._create_dockerfile()
     
     def _create_startup_script(self):
-        """Crear script de inicio para la plataforma"""
+        """Create startup script for the platform."""
         if self.config.environment == 'production':
             script_content = """#!/bin/bash
 # Startup script for Trading Platform - Production
@@ -213,99 +239,112 @@ python main.py --environment development --log-level INFO
 echo "Trading Platform started successfully"
 """
         
-        script_path = f"start_platform_{self.config.environment}.sh"
-        with open(script_path, 'w') as f:
-            f.write(script_content)
+        script_path = Path(f"start_platform_{self.config.environment}.sh")
+        script_path.write_text(script_content)
         
-        # Hacer ejecutable
-        import os
-        os.chmod(script_path, 0o755)
+        # Make executable on Unix systems
+        try:
+            import os
+            os.chmod(script_path, 0o755)
+        except Exception:
+            pass  # Windows doesn't support chmod
+    
+    def _create_dockerfile(self):
+        """Create Dockerfile for containerized deployment."""
+        dockerfile_content = """FROM python:3.10-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \\
+    build-essential \\
+    libpq-dev \\
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements first for better caching
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy application code
+COPY . .
+
+# Create necessary directories
+RUN mkdir -p logs data/sqlite data/cache reports
+
+# Environment variables
+ENV PYTHONPATH=/app
+ENV PYTHONUNBUFFERED=1
+
+# Default command
+CMD ["python", "main.py", "--environment", "production"]
+"""
+        
+        with open('Dockerfile', 'w') as f:
+            f.write(dockerfile_content)
     
     def _deploy_with_docker(self):
-        """Desplegar usando Docker"""
-        logger.info("Desplegando con Docker Compose...")
+        """Deploy using Docker Compose."""
+        logger.info("Deploying with Docker Compose...")
         
-        # Construir y levantar servicios
         import subprocess
         try:
-            subprocess.run(['docker-compose', 'down'], check=False)
+            subprocess.run(['docker-compose', 'down'], check=False, capture_output=True)
             subprocess.run(['docker-compose', 'build', '--no-cache'], check=True)
             subprocess.run(['docker-compose', 'up', '-d'], check=True)
             
-            # Esperar a que los servicios estén listos
+            # Wait for services to be ready
             time.sleep(30)
             
-            # Verificar que los contenedores estén corriendo
+            # Verify containers are running
             containers = self.docker_client.containers.list()
             running_services = [container.name for container in containers]
-            logger.info(f"Servicios ejecutándose: {running_services}")
+            logger.info(f"Running services: {running_services}")
             
+        except FileNotFoundError:
+            logger.warning("docker-compose not found, falling back to manual deployment")
+            self._deploy_manual()
         except subprocess.CalledProcessError as e:
-            raise Exception(f"Error ejecutando Docker Compose: {e}")
+            raise Exception(f"Docker Compose execution error: {e}")
     
     def _deploy_manual(self):
-        """Despliegue manual sin Docker"""
-        logger.info("Realizando despliegue manual...")
+        """Manual deployment without Docker."""
+        logger.info("Performing manual deployment...")
         
-        # Verificar dependencias
+        # Check dependencies
         self._check_dependencies()
         
-        # Inicializar base de datos
-        self._initialize_database()
-        
-        logger.info("Despliegue manual completado. Ejecute: python main.py")
+        logger.info("Manual deployment completed. Run: python main.py")
     
     def _check_dependencies(self):
-        """Verificar dependencias del sistema"""
+        """Check system dependencies."""
         import importlib
-        import sys
         
         dependencies = [
-            'numpy', 'pandas', 'numba', 'scikit_learn', 'tensorflow',
-            'xgboost', 'lightgbm', 'pyqt6', 'matplotlib', 'plotly',
-            'sqlalchemy', 'redis', 'psutil', 'docker'
+            'numpy', 'pandas', 'scikit_learn',
+            'matplotlib', 'plotly', 'sqlalchemy', 'psutil'
         ]
         
         missing_deps = []
         for dep in dependencies:
             try:
-                importlib.import_module(dep)
+                importlib.import_module(dep.replace('-', '_'))
             except ImportError:
                 missing_deps.append(dep)
         
         if missing_deps:
-            logger.warning(f"Dependencias faltantes: {missing_deps}")
-            logger.info("Instale las dependencias con: pip install -r requirements.txt")
-    
-    def _initialize_database(self):
-        """Inicializar base de datos"""
-        logger.info("Inicializando base de datos...")
-        
-        # Esto se haría con migraciones de base de datos en producción
-        # Por ahora, solo creamos las tablas necesarias
-        try:
-            from database.data_manager import TradingData
-            from core.platform import TradingPlatform
-            
-            with TradingPlatform() as platform:
-                if platform.initialized:
-                    # Las tablas se crean automáticamente con SQLAlchemy
-                    logger.info("Base de datos inicializada correctamente")
-                else:
-                    logger.error("No se pudo inicializar la plataforma para DB setup")
-                    
-        except Exception as e:
-            logger.error(f"Error inicializando base de datos: {e}")
+            logger.warning(f"Missing dependencies: {missing_deps}")
+            logger.info("Install with: pip install -r requirements.txt")
+
 
 class BackupManager:
-    """Gestor de backups para datos y configuraciones"""
+    """Manages backups for data and configurations."""
     
     def __init__(self, backup_dir: str = "data/backups"):
         self.backup_dir = Path(backup_dir)
         self.backup_dir.mkdir(parents=True, exist_ok=True)
     
     def create_backup(self, include_data: bool = True, include_config: bool = True):
-        """Crear backup completo"""
+        """Create a complete backup."""
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         backup_path = self.backup_dir / f"backup_{timestamp}"
         backup_path.mkdir(exist_ok=True)
@@ -318,65 +357,118 @@ class BackupManager:
                 self._backup_database(backup_path)
                 self._backup_strategies(backup_path)
             
-            # Comprimir backup
-            self._compress_backup(backup_path)
+            # Compress backup
+            archive_path = self._compress_backup(backup_path)
             
-            logger.info(f"Backup creado: {backup_path}.tar.gz")
+            logger.info(f"Backup created: {archive_path}")
             
-            # Limpiar backups antiguos
+            # Clean old backups
             self._clean_old_backups()
             
+            return archive_path
+            
         except Exception as e:
-            logger.error(f"Error creando backup: {e}")
+            logger.error(f"Backup creation error: {e}")
             raise
     
     def _backup_configurations(self, backup_path: Path):
-        """Hacer backup de configuraciones"""
-        config_files = list(Path('config').glob('*.yaml')) + list(Path('config').glob('*.json'))
+        """Backup configuration files."""
+        config_dir = Path('config')
+        if not config_dir.exists():
+            return
         
-        for config_file in config_files:
-            if config_file.exists():
-                backup_file = backup_path / 'config' / config_file.name
-                backup_file.parent.mkdir(exist_ok=True)
-                backup_file.write_text(config_file.read_text())
+        backup_config_dir = backup_path / 'config'
+        backup_config_dir.mkdir(exist_ok=True)
+        
+        for config_file in config_dir.glob('*.yaml'):
+            shutil.copy2(config_file, backup_config_dir / config_file.name)
+        
+        for config_file in config_dir.glob('*.json'):
+            shutil.copy2(config_file, backup_config_dir / config_file.name)
     
     def _backup_database(self, backup_path: Path):
-        """Hacer backup de base de datos"""
-        # En producción, usar pg_dump para PostgreSQL
-        # Por ahora, backup de datos críticos
-        try:
-            from core.platform import TradingPlatform
-            
-            with TradingPlatform() as platform:
-                # Exportar datos importantes
-                pass
-                
-        except Exception as e:
-            logger.warning(f"No se pudo hacer backup de base de datos: {e}")
+        """Backup database files."""
+        # Backup SQLite database
+        sqlite_db = Path('data/sqlite/trading.db')
+        if sqlite_db.exists():
+            backup_db_dir = backup_path / 'database'
+            backup_db_dir.mkdir(exist_ok=True)
+            shutil.copy2(sqlite_db, backup_db_dir / 'trading.db')
     
     def _backup_strategies(self, backup_path: Path):
-        """Hacer backup de estrategias"""
+        """Backup strategy files."""
         strategies_dir = Path('strategies')
         if strategies_dir.exists():
-            import shutil
-            shutil.copytree(strategies_dir, backup_path / 'strategies')
+            shutil.copytree(
+                strategies_dir, 
+                backup_path / 'strategies',
+                ignore=shutil.ignore_patterns('__pycache__', '*.pyc')
+            )
     
-    def _compress_backup(self, backup_path: Path):
-        """Comprimir backup"""
-        import tarfile
+    def _compress_backup(self, backup_path: Path) -> Path:
+        """Compress backup directory."""
+        archive_path = backup_path.with_suffix('.tar.gz')
         
-        with tarfile.open(f"{backup_path}.tar.gz", "w:gz") as tar:
+        with tarfile.open(archive_path, "w:gz") as tar:
             tar.add(backup_path, arcname=backup_path.name)
         
-        # Eliminar directorio sin comprimir
-        import shutil
+        # Remove uncompressed directory
         shutil.rmtree(backup_path)
+        
+        return archive_path
     
     def _clean_old_backups(self, keep_count: int = 10):
-        """Limpiar backups antiguos"""
+        """Clean old backup files."""
         backup_files = sorted(self.backup_dir.glob("backup_*.tar.gz"))
         
         if len(backup_files) > keep_count:
             for old_backup in backup_files[:-keep_count]:
                 old_backup.unlink()
-                logger.info(f"Backup antiguo eliminado: {old_backup}")
+                logger.info(f"Deleted old backup: {old_backup}")
+    
+    def restore_backup(self, backup_path: str):
+        """Restore from a backup archive."""
+        backup_file = Path(backup_path)
+        
+        if not backup_file.exists():
+            raise FileNotFoundError(f"Backup file not found: {backup_path}")
+        
+        # Extract backup
+        extract_dir = backup_file.parent / 'restore_temp'
+        extract_dir.mkdir(exist_ok=True)
+        
+        with tarfile.open(backup_file, "r:gz") as tar:
+            tar.extractall(extract_dir)
+        
+        # Restore files
+        extracted_backup = list(extract_dir.iterdir())[0]
+        
+        # Restore config
+        config_backup = extracted_backup / 'config'
+        if config_backup.exists():
+            for config_file in config_backup.glob('*'):
+                shutil.copy2(config_file, Path('config') / config_file.name)
+        
+        # Restore database
+        db_backup = extracted_backup / 'database' / 'trading.db'
+        if db_backup.exists():
+            Path('data/sqlite').mkdir(parents=True, exist_ok=True)
+            shutil.copy2(db_backup, Path('data/sqlite/trading.db'))
+        
+        # Cleanup
+        shutil.rmtree(extract_dir)
+        
+        logger.info(f"Backup restored from: {backup_path}")
+    
+    def list_backups(self) -> list:
+        """List available backups."""
+        backups = []
+        for backup_file in sorted(self.backup_dir.glob("backup_*.tar.gz"), reverse=True):
+            stat = backup_file.stat()
+            backups.append({
+                'name': backup_file.name,
+                'path': str(backup_file),
+                'size_mb': stat.st_size / 1024 / 1024,
+                'created': datetime.fromtimestamp(stat.st_ctime).isoformat()
+            })
+        return backups
